@@ -4,7 +4,6 @@ import type { DocumentType } from '../config/requirements.demo';
 export const FIELD_GUIDE: Record<string, string> = {
   'applicant.name': 'Full name of the applicant exactly as written',
   'applicant.dob': 'Date of birth of the applicant',
-  'degree.title': 'Full degree title as written (e.g. "Bachelor of Technology in Computer Science")',
   'degree.level': 'The degree name / level as written (e.g. "Bachelor of Technology", "Master of Science")',
   'degree.field': 'Field of study / major / program (e.g. "Computer Science and Engineering")',
   'degree.institution': 'University or institute that awarded the degree',
@@ -20,7 +19,10 @@ export const FIELD_GUIDE: Record<string, string> = {
   'experience.totalMonths': 'Total experience duration ONLY if the document states a total (e.g. "8 months")',
 };
 
-const DEGREE_FIELDS = ['degree.title', 'degree.level', 'degree.field', 'degree.institution', 'degree.graduationYear', 'degree.cgpa'];
+// NOTE: "degree.title" is deliberately NOT extracted. Documents word it differently ("B.Tech ...",
+// "Bachelor of Technology in ...", "BACHELOR OF TECHNOLOGY") and no requirement uses it, so extracting it only
+// produced false conflicts. The degree level, field, institution, year and CGPA fields carry the substance.
+const DEGREE_FIELDS = ['degree.level', 'degree.field', 'degree.institution', 'degree.graduationYear', 'degree.cgpa'];
 const EXPERIENCE_FIELDS = ['experience.employer', 'experience.role', 'experience.startDate', 'experience.endDate', 'experience.totalMonths'];
 
 /** Fields a document of each type may legitimately provide. Anything else is rejected. */

@@ -242,7 +242,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:translate-x-1 transition-transform" />
           </div>
           <p className="text-xs theme-text-muted">
-            Extracted GPA, credits, university H+ status, and work history.
+            Facts extracted from your documents, each shown with its source.
           </p>
         </button>
 
@@ -274,7 +274,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:translate-x-1 transition-transform" />
           </div>
           <p className="text-xs theme-text-muted">
-            Direct comparison against German university admission criteria.
+            Your documents checked against the DEMO admission requirements.
           </p>
         </button>
 
@@ -290,7 +290,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:translate-x-1 transition-transform" />
           </div>
           <p className="text-xs theme-text-muted">
-            Prioritized timeline for submission, deadlines, and embassy visas.
+            The single next step chosen by the AI agent.
           </p>
         </button>
       </div>
@@ -307,7 +307,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
             </div>
             <p className="text-xs theme-text-muted">
-              Ask questions about Bavarian formula GPA conversions, Uni-Assist deadlines, or blocked accounts.
+              Ask what to do next, what is missing, or where your application stands.
             </p>
           </div>
         </div>

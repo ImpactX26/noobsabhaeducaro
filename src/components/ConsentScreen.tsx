@@ -24,7 +24,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({ onContinue, onBack
           Document Processing Consent
         </h1>
         <p className="text-sm theme-text-muted max-w-md mx-auto">
-          Please confirm authorization to evaluate your academic records against official German admission standards.
+          Please confirm authorization to evaluate your academic records against the DEMO admission requirements.
         </p>
       </div>
 
@@ -51,7 +51,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({ onContinue, onBack
                 Consent to Automated Document Verification
               </span>
               <span className="theme-text-muted">
-                I authorize SIEG.AI to extract academic credentials, calculate Bavarian grade equivalents, and cross-reference records with the KMK Anabin database.
+                I authorize SIEG.AI to extract academic credentials from my documents and check them against the DEMO admission requirements.
               </span>
             </div>
           </label>

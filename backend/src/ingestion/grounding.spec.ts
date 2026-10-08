@@ -1,3 +1,4 @@
+import { ALLOWED_FIELDS, ALL_FIELD_KEYS, EXTRACTION_SCHEMA } from './extraction.schema';
 import { groundClaims, parseProposedClaims, type ProposedClaim } from './grounding';
 
 const PAGES = [
@@ -129,6 +130,25 @@ describe('groundClaims: hallucinated fields are not accepted', () => {
       'DEGREE',
     );
     expect(accepted[0].entryKey).toBeNull();
+  });
+});
+
+describe('degree.title is not extracted (it caused false conflicts with real model output)', () => {
+  it('is not offered to the model', () => {
+    expect(ALL_FIELD_KEYS).not.toContain('degree.title');
+    expect((EXTRACTION_SCHEMA.properties.claims.items.properties.fieldKey as { enum: string[] }).enum).not.toContain('degree.title');
+    for (const fields of Object.values(ALLOWED_FIELDS)) expect(fields).not.toContain('degree.title');
+  });
+
+  it('is rejected if a model returns it anyway, so differently-worded titles can never become a conflict', () => {
+    const pages = [{ pageNo: 1, text: 'DEGREE CERTIFICATE BACHELOR OF TECHNOLOGY B.Tech Computer Science and Engineering' }];
+    const r = groundClaims([claim({ fieldKey: 'degree.title', rawValue: 'BACHELOR OF TECHNOLOGY', quote: 'BACHELOR OF TECHNOLOGY' })], pages, 'DEGREE');
+    expect(r.accepted).toEqual([]);
+    expect(r.rejected.map((x) => x.reason)).toEqual(['UNKNOWN_FIELD']);
+  });
+
+  it('still extracts the fields that matter for conflicts', () => {
+    expect(ALLOWED_FIELDS.DEGREE).toEqual(expect.arrayContaining(['degree.level', 'degree.field', 'degree.institution', 'degree.graduationYear', 'degree.cgpa']));
   });
 });
 

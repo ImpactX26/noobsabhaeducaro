@@ -29,10 +29,11 @@ const NOT_SUPPORTED =
 
 function intentOf(text: string): Intent {
   const t = text.toLowerCase();
-  if (/(next|what (should|do) i do|action|step)/.test(t)) return 'next';
-  if (/(missing|lack|gap|conflict|problem|issue|wrong)/.test(t)) return 'missing';
-  if (/(document|upload|file|certificate)/.test(t)) return 'documents';
-  if (/(complete|profile|status|ready|score|qualif|requirement|eligib|where do i stand)/.test(t)) return 'status';
+  // whole words only: "profile" must not match "file", "application" must not match "action"
+  if (/\b(next|what (should|do) i do|action|steps?)\b/.test(t)) return 'next';
+  if (/\b(missing|lacks?|gaps?|conflicts?|problems?|issues?|wrong)\b/.test(t)) return 'missing';
+  if (/\b(documents?|uploads?|files?|certificates?)\b/.test(t)) return 'documents';
+  if (/\b(complete|profile|status|ready|score|qualif\w*|requirements?|eligib\w*|where do i stand)\b/.test(t)) return 'status';
   return 'unknown';
 }
 

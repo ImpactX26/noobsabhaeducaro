@@ -44,7 +44,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({ onContinue, onBack
               type="checkbox"
               checked={agreedTerms}
               onChange={(e) => setAgreedTerms(e.target.checked)}
-              className="mt-1 w-4 h-4 accent-[#C90016] rounded cursor-pointer"
+              className="mt-1 w-4 h-4 accent-[#E30613] rounded cursor-pointer"
             />
             <div className="text-xs space-y-1">
               <span className="font-bold theme-text-main block">
@@ -61,7 +61,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({ onContinue, onBack
               type="checkbox"
               checked={agreedAnabin}
               onChange={(e) => setAgreedAnabin(e.target.checked)}
-              className="mt-1 w-4 h-4 accent-[#C90016] rounded cursor-pointer"
+              className="mt-1 w-4 h-4 accent-[#E30613] rounded cursor-pointer"
             />
             <div className="text-xs space-y-1">
               <span className="font-bold theme-text-main block">
@@ -89,7 +89,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({ onContinue, onBack
             disabled={!canContinue}
             className={`px-8 py-3.5 rounded-xl font-black text-sm flex items-center gap-2 transition-all ${
               canContinue
-                ? 'bg-[#C90016] hover:bg-[#E00018] text-white shadow-md cursor-pointer'
+                ? 'bg-[#E30613] hover:bg-[#E00018] text-white shadow-md cursor-pointer'
                 : 'theme-bg-surface theme-text-muted opacity-50 cursor-not-allowed'
             }`}
           >

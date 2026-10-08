@@ -83,7 +83,7 @@ export const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
 
           <div className="w-full h-3 theme-bg-surface rounded-full overflow-hidden border theme-border p-0.5 flex">
             <div
-              className="h-full bg-gradient-to-r from-[#050505] via-[#C90016] to-[#FFD21C] rounded-full transition-all duration-150"
+              className="h-full bg-gradient-to-r from-[#050505] via-[#E30613] to-[#FFD21C] rounded-full transition-all duration-150"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -91,7 +91,7 @@ export const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
 
         {/* Live Active Step Readout */}
         <div className="p-4 rounded-2xl theme-bg-surface border theme-border text-left space-y-3">
-          <div className="text-[11px] font-mono font-bold text-[#C90016] uppercase tracking-wider flex items-center justify-between">
+          <div className="text-[11px] font-mono font-bold text-[#E30613] uppercase tracking-wider flex items-center justify-between">
             <span>Current Pipeline Operation</span>
             <span className="w-2 h-2 rounded-full bg-[#FFD21C] animate-ping" />
           </div>
@@ -108,7 +108,7 @@ export const ProcessingScreen: React.FC<ProcessingScreenProps> = ({
             KMK Anabin H+
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#C90016]" />
+            <span className="w-2 h-2 rounded-full bg-[#E30613]" />
             Uni-Assist Criteria
           </span>
           <span className="flex items-center gap-1.5">

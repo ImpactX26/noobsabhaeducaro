@@ -90,7 +90,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         {/* Applicant Tag */}
         <div className="flex items-center gap-3 theme-bg-card px-4 py-2.5 rounded-2xl border theme-border self-start md:self-auto shadow-md">
-          <div className="w-9 h-9 rounded-xl bg-[#C90016] text-white font-mono font-bold flex items-center justify-center text-xs shadow-xs">
+          <div className="w-9 h-9 rounded-xl bg-[#E30613] text-white font-mono font-bold flex items-center justify-center text-xs shadow-xs">
             {details.fullName
               .split(' ')
               .map((n) => n[0])
@@ -137,7 +137,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <div className="space-y-2">
           <div className="w-full h-3.5 theme-bg-surface rounded-full overflow-hidden border theme-border p-0.5 flex">
             <div
-              className="h-full bg-gradient-to-r from-[#050505] via-[#C90016] to-[#FFD21C] rounded-full transition-all duration-700 shadow-sm"
+              className="h-full bg-gradient-to-r from-[#050505] via-[#E30613] to-[#FFD21C] rounded-full transition-all duration-700 shadow-sm"
               style={{ width: `${currentProgress}%` }}
             />
           </div>
@@ -154,7 +154,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         {/* Metric 1: Documents */}
         <div
           onClick={onNavigateToDocuments}
-          className="theme-bg-card border theme-border hover:border-[#C90016] p-6 rounded-3xl space-y-3 cursor-pointer transition-all duration-200 group shadow-md"
+          className="theme-bg-card border theme-border hover:border-[#E30613] p-6 rounded-3xl space-y-3 cursor-pointer transition-all duration-200 group shadow-md"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono font-bold uppercase tracking-wider theme-text-muted">
@@ -175,8 +175,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 <CheckCircle2 className="w-3.5 h-3.5" /> All files present
               </span>
             ) : (
-              <span className="text-[#C90016] font-bold flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5 text-[#C90016]" /> {missingCount} document missing
+              <span className="text-[#E30613] font-bold flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-[#E30613]" /> {missingCount} document missing
               </span>
             )}
           </div>
@@ -216,7 +216,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         {/* Metric 3: Target Institution */}
         <div
           onClick={onNavigateToProfile}
-          className="theme-bg-card border theme-border hover:border-[#C90016] p-6 rounded-3xl space-y-3 cursor-pointer transition-all duration-200 group shadow-md"
+          className="theme-bg-card border theme-border hover:border-[#E30613] p-6 rounded-3xl space-y-3 cursor-pointer transition-all duration-200 group shadow-md"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono font-bold uppercase tracking-wider theme-text-muted">
@@ -242,13 +242,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         className={`border-2 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl transition-all ${
           isCertificateUploaded
             ? 'theme-bg-card border-emerald-500/80 shadow-emerald-500/5'
-            : 'theme-bg-surface border-[#C90016] shadow-red-500/10'
+            : 'theme-bg-surface border-[#E30613] shadow-red-500/10'
         }`}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded bg-[#C90016] text-white font-mono font-extrabold text-[10px] uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded bg-[#E30613] text-white font-mono font-extrabold text-[10px] uppercase tracking-wider">
                 Priority Directive
               </span>
               <span className="text-xs font-mono theme-text-muted">
@@ -266,7 +266,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           {!isCertificateUploaded ? (
             <button
               onClick={() => setShowUploadModal(true)}
-              className="px-6 py-3.5 bg-[#C90016] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              className="px-6 py-3.5 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
             >
               <Upload className="w-4 h-4" />
               <span>Upload Certificate</span>
@@ -311,12 +311,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <button
           onClick={onNavigateToProfile}
-          className="p-5 rounded-2xl theme-bg-card border theme-border hover:border-[#C90016] text-left space-y-2 cursor-pointer transition-all group shadow-sm"
+          className="p-5 rounded-2xl theme-bg-card border theme-border hover:border-[#E30613] text-left space-y-2 cursor-pointer transition-all group shadow-sm"
         >
-          <div className="text-xs font-mono font-bold text-[#C90016] uppercase">
+          <div className="text-xs font-mono font-bold text-[#E30613] uppercase">
             Step 1 · Dossier
           </div>
-          <div className="text-base font-black theme-text-main group-hover:text-[#C90016] transition-colors flex items-center justify-between">
+          <div className="text-base font-black theme-text-main group-hover:text-[#E30613] transition-colors flex items-center justify-between">
             <span>Applicant Profile</span>
             <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -327,12 +327,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         <button
           onClick={onNavigateToDocuments}
-          className="p-5 rounded-2xl theme-bg-card border theme-border hover:border-[#C90016] text-left space-y-2 cursor-pointer transition-all group shadow-sm"
+          className="p-5 rounded-2xl theme-bg-card border theme-border hover:border-[#E30613] text-left space-y-2 cursor-pointer transition-all group shadow-sm"
         >
-          <div className="text-xs font-mono font-bold text-[#C90016] uppercase">
+          <div className="text-xs font-mono font-bold text-[#E30613] uppercase">
             Step 2 · Repository
           </div>
-          <div className="text-base font-black theme-text-main group-hover:text-[#C90016] transition-colors flex items-center justify-between">
+          <div className="text-base font-black theme-text-main group-hover:text-[#E30613] transition-colors flex items-center justify-between">
             <span>Uploaded Files</span>
             <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -359,12 +359,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
         <button
           onClick={onNavigateToNextAction}
-          className="p-5 rounded-2xl theme-bg-card border theme-border hover:border-[#C90016] text-left space-y-2 cursor-pointer transition-all group shadow-sm"
+          className="p-5 rounded-2xl theme-bg-card border theme-border hover:border-[#E30613] text-left space-y-2 cursor-pointer transition-all group shadow-sm"
         >
-          <div className="text-xs font-mono font-bold text-[#C90016] uppercase">
+          <div className="text-xs font-mono font-bold text-[#E30613] uppercase">
             Step 4 · Plan
           </div>
-          <div className="text-base font-black theme-text-main group-hover:text-[#C90016] transition-colors flex items-center justify-between">
+          <div className="text-base font-black theme-text-main group-hover:text-[#E30613] transition-colors flex items-center justify-between">
             <span>Next Action Plan</span>
             <ArrowRight className="w-4 h-4 text-neutral-500 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -377,7 +377,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
       {/* Floating Assistant Trigger Callout */}
       <div className="theme-bg-surface border theme-border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#C90016] text-white flex items-center justify-center font-bold shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#E30613] text-white flex items-center justify-center font-bold shrink-0">
             <Bot className="w-5 h-5" />
           </div>
           <div>
@@ -411,7 +411,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </button>
 
             <div className="space-y-1">
-              <span className="text-xs font-mono text-[#C90016] font-bold uppercase">
+              <span className="text-xs font-mono text-[#E30613] font-bold uppercase">
                 Document Upload
               </span>
               <h3 className="text-xl font-black theme-text-main uppercase">

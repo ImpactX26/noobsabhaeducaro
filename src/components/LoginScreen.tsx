@@ -105,7 +105,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         </div>
 
         <div className="flex items-center justify-center gap-2">
-          <span className="px-2.5 py-1 rounded bg-[#C90016] text-white font-mono font-extrabold text-sm tracking-wider">
+          <span className="px-2.5 py-1 rounded bg-[#E30613] text-white font-mono font-extrabold text-sm tracking-wider">
             SIEG.AI
           </span>
           <span className="text-xl font-black theme-text-main">
@@ -128,7 +128,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           }}
           className={`py-2 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer ${
             mode === 'login'
-              ? 'bg-[#C90016] text-white shadow-md'
+              ? 'bg-[#E30613] text-white shadow-md'
               : 'theme-text-muted hover:theme-text-main'
           }`}
         >
@@ -142,7 +142,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           }}
           className={`py-2 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer ${
             mode === 'signup'
-              ? 'bg-[#C90016] text-white shadow-md'
+              ? 'bg-[#E30613] text-white shadow-md'
               : 'theme-text-muted hover:theme-text-main'
           }`}
         >
@@ -152,8 +152,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
       {/* Error Message */}
       {error && (
-        <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-[#C90016] flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 text-[#C90016] shrink-0 mt-0.5" />
+        <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-[#E30613] flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-[#E30613] shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
@@ -181,7 +181,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Rahul Sharma"
-                className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#C90016] transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#E30613] transition-colors"
               />
             </div>
           </div>
@@ -199,7 +199,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. rahul.sharma@example.com"
-              className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#C90016] transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#E30613] transition-colors"
             />
           </div>
         </div>
@@ -227,7 +227,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#C90016] transition-colors"
+              className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#E30613] transition-colors"
             />
           </div>
         </div>
@@ -245,7 +245,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#C90016] transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#E30613] transition-colors"
               />
             </div>
           </div>
@@ -254,7 +254,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full mt-2 py-3.5 px-4 rounded-xl bg-[#C90016] hover:bg-[#E00018] active:bg-[#A00012] text-white font-black text-sm tracking-wide uppercase transition-all shadow-[0_4px_20px_rgba(201,0,22,0.4)] cursor-pointer flex items-center justify-center gap-2 border border-red-500/30 disabled:opacity-50"
+          className="w-full mt-2 py-3.5 px-4 rounded-xl bg-[#E30613] hover:bg-[#E00018] active:bg-[#A00012] text-white font-black text-sm tracking-wide uppercase transition-all shadow-[0_4px_20px_rgba(201,0,22,0.4)] cursor-pointer flex items-center justify-center gap-2 border border-red-500/30 disabled:opacity-50"
         >
           <span>{mode === 'login' ? 'Sign In to Workspace' : 'Create Applicant Dossier'}</span>
           <ArrowRight className="w-4 h-4" />

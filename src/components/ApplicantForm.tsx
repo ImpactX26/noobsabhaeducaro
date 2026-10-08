@@ -110,7 +110,7 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
               onClick={() => handleGoalChange('study')}
               className={`p-4 rounded-2xl border-2 flex items-center justify-center gap-3 transition-all cursor-pointer font-bold text-sm sm:text-base ${
                 formData.goal === 'study'
-                  ? 'bg-[#C90016] border-red-500 text-white shadow-[0_4px_16px_rgba(201,0,22,0.4)]'
+                  ? 'bg-[#E30613] border-red-500 text-white shadow-[0_4px_16px_rgba(201,0,22,0.4)]'
                   : 'theme-bg-surface theme-border theme-text-main hover:border-neutral-500'
               }`}
             >
@@ -123,7 +123,7 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
               onClick={() => handleGoalChange('work')}
               className={`p-4 rounded-2xl border-2 flex items-center justify-center gap-3 transition-all cursor-pointer font-bold text-sm sm:text-base ${
                 formData.goal === 'work'
-                  ? 'bg-[#C90016] border-red-500 text-white shadow-[0_4px_16px_rgba(201,0,22,0.4)]'
+                  ? 'bg-[#E30613] border-red-500 text-white shadow-[0_4px_16px_rgba(201,0,22,0.4)]'
                   : 'theme-bg-surface theme-border theme-text-main hover:border-neutral-500'
               }`}
             >
@@ -144,10 +144,10 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
               value={formData.fullName}
               onChange={(e) => handleChange('fullName', e.target.value)}
               placeholder="e.g. Rahul Sharma"
-              className="w-full px-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#C90016] transition-colors"
+              className="w-full px-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#E30613] transition-colors"
             />
             {errors.fullName && (
-              <p className="text-xs text-[#C90016]">{errors.fullName}</p>
+              <p className="text-xs text-[#E30613]">{errors.fullName}</p>
             )}
           </div>
 
@@ -160,10 +160,10 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
               placeholder="e.g. rahul.sharma@example.com"
-              className="w-full px-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#C90016] transition-colors"
+              className="w-full px-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#E30613] transition-colors"
             />
             {errors.email && (
-              <p className="text-xs text-[#C90016]">{errors.email}</p>
+              <p className="text-xs text-[#E30613]">{errors.email}</p>
             )}
           </div>
         </div>
@@ -179,10 +179,10 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
               value={formData.intendedField}
               onChange={(e) => handleChange('intendedField', e.target.value)}
               placeholder="e.g. Computer Science / Robotics"
-              className="w-full px-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#C90016] transition-colors"
+              className="w-full px-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#E30613] transition-colors"
             />
             {errors.intendedField && (
-              <p className="text-xs text-[#C90016]">{errors.intendedField}</p>
+              <p className="text-xs text-[#E30613]">{errors.intendedField}</p>
             )}
           </div>
 
@@ -195,10 +195,10 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
               value={formData.targetInstitution}
               onChange={(e) => handleChange('targetInstitution', e.target.value)}
               placeholder={formData.goal === 'study' ? 'e.g. Technical University of Munich' : 'e.g. SAP / Siemens'}
-              className="w-full px-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#C90016] transition-colors"
+              className="w-full px-4 py-3 rounded-xl theme-bg-input border theme-border theme-text-main text-sm focus:outline-none focus:border-[#E30613] transition-colors"
             />
             {errors.targetInstitution && (
-              <p className="text-xs text-[#C90016]">{errors.targetInstitution}</p>
+              <p className="text-xs text-[#E30613]">{errors.targetInstitution}</p>
             )}
           </div>
         </div>
@@ -216,7 +216,7 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
 
           <button
             type="submit"
-            className="px-8 py-3.5 bg-[#C90016] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
+            className="px-8 py-3.5 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
           >
             <span>Proceed to Consent</span>
             <ArrowRight className="w-4 h-4" />

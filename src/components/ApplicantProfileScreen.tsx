@@ -93,7 +93,7 @@ export const ApplicantProfileScreen: React.FC<ApplicantProfileScreenProps> = ({
 
         <button
           onClick={onContinueToQualification}
-          className="px-8 py-3.5 bg-[#C90016] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
+          className="px-8 py-3.5 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
         >
           <span>Run German Qualification Check</span>
           <ArrowRight className="w-4 h-4" />

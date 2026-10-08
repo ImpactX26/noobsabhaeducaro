@@ -56,7 +56,7 @@ export const StepProgressBar: React.FC<StepProgressBarProps> = ({ currentStep, o
                     isCompleted
                       ? 'bg-[#151515] text-[#FFD21C] border border-[#FFD21C]/50'
                       : isCurrent
-                      ? 'bg-[#C90016] text-white shadow-md'
+                      ? 'bg-[#E30613] text-white shadow-md'
                       : 'bg-[#151515] text-neutral-500 border border-[#262626]'
                   }`}
                 >

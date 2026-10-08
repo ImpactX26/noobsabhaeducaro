@@ -17,7 +17,7 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({
       className={`border-2 rounded-3xl p-6 sm:p-10 shadow-2xl transition-all ${
         isCertificateUploaded
           ? 'theme-bg-card border-emerald-500/80 shadow-emerald-500/5'
-          : 'theme-bg-surface border-[#C90016] ring-4 ring-red-500/10'
+          : 'theme-bg-surface border-[#E30613] ring-4 ring-red-500/10'
       }`}
     >
       <div className="max-w-2xl mx-auto space-y-6 text-center sm:text-left">
@@ -38,8 +38,8 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({
 
           {/* Critical Callout */}
           {!isCertificateUploaded ? (
-            <div className="inline-flex items-center gap-2.5 text-lg sm:text-xl font-bold text-[#C90016] bg-red-500/10 border border-red-500/40 px-4 py-2.5 rounded-2xl shadow-sm">
-              <AlertTriangle className="w-5 h-5 text-[#C90016] shrink-0 stroke-[2.5]" />
+            <div className="inline-flex items-center gap-2.5 text-lg sm:text-xl font-bold text-[#E30613] bg-red-500/10 border border-red-500/40 px-4 py-2.5 rounded-2xl shadow-sm">
+              <AlertTriangle className="w-5 h-5 text-[#E30613] shrink-0 stroke-[2.5]" />
               <span>Upload your language certificate</span>
             </div>
           ) : (
@@ -68,7 +68,7 @@ export const NextActionCard: React.FC<NextActionCardProps> = ({
           {!isCertificateUploaded ? (
             <button
               onClick={onUploadClick}
-              className="w-full sm:w-auto px-8 py-4 bg-[#C90016] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer"
+              className="w-full sm:w-auto px-8 py-4 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer"
             >
               <Upload className="w-4 h-4" />
               <span>Upload Language Certificate</span>

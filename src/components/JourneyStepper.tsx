@@ -65,7 +65,7 @@ export const JourneyStepper: React.FC<JourneyStepperProps> = ({
                 <div
                   className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-mono font-bold shrink-0 transition-colors ${
                     isCurrent
-                      ? 'bg-[#C90016] text-white shadow-md'
+                      ? 'bg-[#E30613] text-white shadow-md'
                       : isCompleted
                       ? 'bg-[#151515] text-[#FFD21C] border border-[#FFD21C]/50'
                       : 'bg-[#222] text-neutral-500'
@@ -93,7 +93,7 @@ export const JourneyStepper: React.FC<JourneyStepperProps> = ({
                 </div>
 
                 {isCurrent && (
-                  <span className="ml-auto text-[9px] font-mono font-black text-white bg-[#C90016] px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
+                  <span className="ml-auto text-[9px] font-mono font-black text-white bg-[#E30613] px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">
                     Now
                   </span>
                 )}

@@ -37,9 +37,9 @@ export const GermanyBackground: React.FC<GermanyBackgroundProps> = ({
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden' }}
     >
       {/* Fallback architectural gradient background */}
-      <div className={`absolute inset-0 transition-colors duration-300 ${isLight ? 'bg-white' : 'bg-[#050505]'}`} />
+      <div className="absolute inset-0 bg-[#050505]" />
 
-      {/* Rotating Background Images */}
+      {/* Rotating Background Images - Clear, HD, cinematic */}
       {images.map((img, idx) => {
         const isActive = idx === currentIndex;
         const isFailed = failedImages[img.id];
@@ -63,32 +63,19 @@ export const GermanyBackground: React.FC<GermanyBackgroundProps> = ({
         );
       })}
 
-      {/* Theme-Adaptive Gradient Overlays for optimal readability & image presence */}
-      {isLight ? (
-        <>
-          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-white/50" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-white/70" />
-        </>
-      ) : (
-        <>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/95 via-[#050505]/65 to-[#050505]/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/60" />
-        </>
-      )}
+      {/* Subtle dark overlay only where necessary to maintain text readability without making it too dark */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/80 via-[#050505]/45 to-[#050505]/15" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/85 via-transparent to-[#050505]/35" />
 
       {/* Landmark Indicator in Bottom Left */}
       {currentImage && !failedImages[currentImage.id] && (
         <div
-          className={`absolute bottom-5 left-6 z-10 hidden md:flex items-center gap-2.5 text-[11px] font-mono font-medium tracking-wide px-3.5 py-1.5 rounded-full backdrop-blur-md border shadow-xl ${
-            isLight
-              ? 'bg-white/90 text-neutral-800 border-neutral-200'
-              : 'bg-[#151515]/90 text-[#E8E8E8] border-[#262626]'
-          }`}
+          className="absolute bottom-5 left-6 z-10 hidden md:flex items-center gap-2.5 text-[11px] font-mono font-medium tracking-wide px-3.5 py-1.5 rounded-full backdrop-blur-md border shadow-xl bg-[#050505]/80 text-[#E8E8E8] border-white/15"
         >
           <span className="w-2 h-2 rounded-full bg-[#FFD21C] animate-pulse shadow-[0_0_8px_#FFD21C]" />
-          <span className={`font-bold ${isLight ? 'text-black' : 'text-white'}`}>{currentImage.title}</span>
-          <span className="opacity-30">/</span>
-          <span className={isLight ? 'text-neutral-600' : 'text-neutral-400'}>{currentImage.location}</span>
+          <span className="font-bold text-white">{currentImage.title}</span>
+          <span className="opacity-30 text-white/50">/</span>
+          <span className="text-neutral-300">{currentImage.location}</span>
         </div>
       )}
     </div>

@@ -42,12 +42,12 @@ export const QualificationCheckScreen: React.FC<QualificationCheckScreenProps> =
 
       {/* Prominent Highlighting for Missing Requirement */}
       {missingCount > 0 && (
-        <div className="bg-red-500/10 border-2 border-[#C90016] rounded-3xl p-6 sm:p-8 shadow-2xl flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-[#C90016] flex items-center justify-center shrink-0 border border-red-500/30">
-            <AlertTriangle className="w-6 h-6 text-[#C90016]" />
+        <div className="bg-red-500/10 border-2 border-[#E30613] rounded-3xl p-6 sm:p-8 shadow-2xl flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-[#E30613] flex items-center justify-center shrink-0 border border-red-500/30">
+            <AlertTriangle className="w-6 h-6 text-[#E30613]" />
           </div>
           <div className="space-y-1.5 flex-1">
-            <div className="text-xs font-mono font-extrabold text-[#C90016] uppercase tracking-wider">
+            <div className="text-xs font-mono font-extrabold text-[#E30613] uppercase tracking-wider">
               Admission Action Required
             </div>
             <h3 className="text-xl font-black theme-text-main">
@@ -87,7 +87,7 @@ export const QualificationCheckScreen: React.FC<QualificationCheckScreenProps> =
 
         <button
           onClick={onContinueToNextAction}
-          className="px-8 py-3.5 bg-[#C90016] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
+          className="px-8 py-3.5 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
         >
           <span>View Next Action Directive</span>
           <ArrowRight className="w-4 h-4" />

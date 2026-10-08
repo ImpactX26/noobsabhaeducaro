@@ -401,7 +401,7 @@ function AppContent() {
         <footer className="relative z-10 border-t theme-border theme-bg-card py-6 text-center text-xs font-mono theme-text-muted transition-colors">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="px-2 py-0.5 rounded bg-[#C90016] text-white font-mono font-bold text-[10px]">
+              <span className="px-2 py-0.5 rounded bg-[#E30613] text-white font-mono font-bold text-[10px]">
                 SIEG.AI
               </span>
               <span className="font-bold theme-text-main">

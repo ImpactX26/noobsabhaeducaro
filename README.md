@@ -1,1 +1,1 @@
-﻿# noobsabhaeducaro
+# noobsabhaeducaro

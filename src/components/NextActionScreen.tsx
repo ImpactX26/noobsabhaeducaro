@@ -64,7 +64,7 @@ export const NextActionScreen: React.FC<NextActionScreenProps> = ({
       {/* Interactive Testing Sandbox Notice */}
       <div className="p-4 rounded-2xl theme-bg-card border theme-border space-y-2 text-xs">
         <div className="flex items-center justify-between">
-          <span className="font-mono font-bold text-[#C90016] uppercase">
+          <span className="font-mono font-bold text-[#E30613] uppercase">
             Interactive Prototype Sandbox
           </span>
           <span className="theme-text-muted">Test state propagation</span>
@@ -97,7 +97,7 @@ export const NextActionScreen: React.FC<NextActionScreenProps> = ({
             </button>
 
             <div className="space-y-1">
-              <span className="text-xs font-mono text-[#C90016] font-bold uppercase">
+              <span className="text-xs font-mono text-[#E30613] font-bold uppercase">
                 Document Upload
               </span>
               <h3 className="text-xl font-black theme-text-main uppercase">

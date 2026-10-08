@@ -87,7 +87,7 @@ export const GermanyHeroCarousel: React.FC = () => {
           {/* German Tri-color micro chip */}
           <div className="flex items-center h-2.5 w-6 rounded-xs overflow-hidden shadow-xs">
             <span className="w-2 h-full bg-[#050505]" />
-            <span className="w-2 h-full bg-[#C90016]" />
+            <span className="w-2 h-full bg-[#E30613]" />
             <span className="w-2 h-full bg-[#FFD21C]" />
           </div>
           <span className="text-[11px] font-mono font-bold tracking-wider theme-text-muted uppercase">
@@ -143,7 +143,7 @@ export const GermanyHeroCarousel: React.FC = () => {
                     <span>{item.city}</span>
                   </span>
 
-                  <span className="px-2 py-0.5 rounded-md bg-[#C90016]/90 text-[10px] font-mono font-bold text-white uppercase tracking-wider shadow-md">
+                  <span className="px-2 py-0.5 rounded-md bg-[#E30613]/90 text-[10px] font-mono font-bold text-white uppercase tracking-wider shadow-md">
                     DE 🇩🇪
                   </span>
                 </div>
@@ -173,7 +173,7 @@ export const GermanyHeroCarousel: React.FC = () => {
       {/* Footer bar with Pause-on-hover indicator */}
       <div className="px-4 py-2 theme-bg-surface border-t theme-border flex items-center justify-between text-[11px] font-mono theme-text-muted">
         <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#C90016]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#E30613]" />
           <span>Smooth 16s linear loop</span>
         </div>
         <span className="theme-text-muted opacity-80 hidden sm:inline">

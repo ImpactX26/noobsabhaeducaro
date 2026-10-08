@@ -27,11 +27,11 @@ html.dark,
 
 /* German Flag Micro Stripe */
 .flag-stripe {
-  background: linear-gradient(90deg, #050505 0%, #050505 33.3%, #C90016 33.3%, #C90016 66.6%, #FFD21C 66.6%, #FFD21C 100%);
+  background: linear-gradient(90deg, #050505 0%, #050505 33.3%, #E30613 33.3%, #E30613 66.6%, #FFD21C 66.6%, #FFD21C 100%);
 }
 
 .flag-stripe-vertical {
-  background: linear-gradient(180deg, #050505 0%, #050505 33.3%, #C90016 33.3%, #C90016 66.6%, #FFD21C 66.6%, #FFD21C 100%);
+  background: linear-gradient(180deg, #050505 0%, #050505 33.3%, #E30613 33.3%, #E30613 66.6%, #FFD21C 66.6%, #FFD21C 100%);
 }
 
 body {
@@ -137,5 +137,5 @@ h1, h2, h3, .font-display {
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C90016;
+  background: #E30613;
 }

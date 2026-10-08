@@ -125,7 +125,7 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
             ✓ {uploadedCount} Uploaded
           </span>
           {missingCount > 0 && (
-            <span className="px-3 py-1.5 rounded-lg bg-red-500/10 text-[#C90016] border border-red-500/30 font-bold">
+            <span className="px-3 py-1.5 rounded-lg bg-red-500/10 text-[#E30613] border border-red-500/30 font-bold">
               ⚠ {missingCount} Missing
             </span>
           )}
@@ -134,8 +134,8 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
 
       {/* Warning Box if Language Cert is missing */}
       {documents.some((d) => d.id === 'language' && d.status === 'missing') && (
-        <div className="bg-red-500/10 border border-[#C90016]/40 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 text-xs text-[#C90016]">
-          <AlertTriangle className="w-5 h-5 text-[#C90016] shrink-0 mt-0.5" />
+        <div className="bg-red-500/10 border border-[#E30613]/40 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 text-xs text-[#E30613]">
+          <AlertTriangle className="w-5 h-5 text-[#E30613] shrink-0 mt-0.5" />
           <div className="space-y-1">
             <span className="font-bold theme-text-main block">
               German Admissions Directive: Language Proficiency Missing
@@ -158,7 +158,7 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
               className={`p-5 rounded-2xl border transition-all theme-bg-card ${
                 isUploaded
                   ? 'theme-border hover:border-neutral-500'
-                  : 'border-[#C90016]/60 bg-red-500/5'
+                  : 'border-[#E30613]/60 bg-red-500/5'
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -167,7 +167,7 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border ${
                       isUploaded
                         ? 'theme-bg-surface text-[#FFD21C] theme-border'
-                        : 'bg-red-500/10 text-[#C90016] border-red-500/30'
+                        : 'bg-red-500/10 text-[#E30613] border-red-500/30'
                     }`}
                   >
                     <FileText className="w-5 h-5" />
@@ -179,7 +179,7 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
                         {doc.name}
                       </h3>
                       {doc.requiredFor && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C90016] text-white font-bold uppercase">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#E30613] text-white font-bold uppercase">
                           {doc.requiredFor}
                         </span>
                       )}
@@ -212,7 +212,7 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
                   ) : (
                     <button
                       onClick={() => triggerUploadClick(doc.id)}
-                      className="px-4 py-2.5 rounded-xl bg-[#C90016] hover:bg-[#E00018] text-white font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-[#E30613] hover:bg-[#E00018] text-white font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       <span>Upload File</span>
@@ -237,7 +237,7 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
 
         <button
           onClick={onContinue}
-          className="px-8 py-3.5 bg-[#C90016] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
+          className="px-8 py-3.5 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
         >
           <span>Launch AI Document Scan</span>
           <ArrowRight className="w-4 h-4" />

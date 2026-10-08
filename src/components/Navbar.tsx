@@ -74,14 +74,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* SIEG.AI Monogram with German Flag Micro-Tab */}
             <div className="relative flex items-center">
               <div className="w-1.5 self-stretch rounded-l-xs flag-stripe-vertical mr-0.5 opacity-90" />
-              <span className="px-2.5 py-1 rounded-r-md bg-[#C90016] text-white font-mono font-extrabold text-xs tracking-widest border border-red-500/30 shadow-[0_0_12px_rgba(201,0,22,0.4)] group-hover:bg-[#E00018] transition-colors">
+              <span className="px-2.5 py-1 rounded-r-md bg-[#E30613] text-white font-mono font-extrabold text-xs tracking-widest border border-red-500/30 shadow-[0_0_12px_rgba(201,0,22,0.4)] group-hover:bg-[#E00018] transition-colors">
                 SIEG.AI
               </span>
             </div>
 
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg font-black tracking-tight theme-text-main group-hover:text-[#C90016] transition-colors">
+                <span className="text-base sm:text-lg font-black tracking-tight theme-text-main group-hover:text-[#E30613] transition-colors">
                   AI Applicant Copilot
                 </span>
                 <span className="hidden lg:inline text-[10px] font-mono px-2 py-0.5 rounded theme-bg-subtle text-[#FFD21C] border theme-border">
@@ -101,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onNavigate('home')}
             className={`transition-all cursor-pointer py-1 ${
               currentStep === 'home'
-                ? 'text-[#C90016] font-bold border-b-2 border-[#C90016]'
+                ? 'text-[#E30613] font-bold border-b-2 border-[#E30613]'
                 : 'hover:theme-text-main'
             }`}
           >
@@ -112,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onNavigate('dashboard')}
             className={`transition-all cursor-pointer py-1 ${
               currentStep === 'dashboard'
-                ? 'text-[#C90016] font-bold border-b-2 border-[#C90016]'
+                ? 'text-[#E30613] font-bold border-b-2 border-[#E30613]'
                 : 'hover:theme-text-main'
             }`}
           >
@@ -123,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onNavigate('documents')}
             className={`transition-all cursor-pointer py-1 ${
               currentStep === 'documents'
-                ? 'text-[#C90016] font-bold border-b-2 border-[#C90016]'
+                ? 'text-[#E30613] font-bold border-b-2 border-[#E30613]'
                 : 'hover:theme-text-main'
             }`}
           >
@@ -134,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onNavigate('profile')}
             className={`transition-all cursor-pointer py-1 ${
               currentStep === 'profile'
-                ? 'text-[#C90016] font-bold border-b-2 border-[#C90016]'
+                ? 'text-[#E30613] font-bold border-b-2 border-[#E30613]'
                 : 'hover:theme-text-main'
             }`}
           >
@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Authentication State Button */}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 theme-bg-surface theme-border border py-1 px-2.5 rounded-xl text-xs font-mono">
-              <div className="w-6 h-6 rounded-lg bg-[#C90016] text-white flex items-center justify-center font-bold text-[10px]">
+              <div className="w-6 h-6 rounded-lg bg-[#E30613] text-white flex items-center justify-center font-bold text-[10px]">
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <span className="font-bold theme-text-main max-w-[100px] truncate">
@@ -160,7 +160,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={signOut}
                 title="Sign Out"
                 aria-label="Sign Out"
-                className="p-1 hover:text-[#C90016] theme-text-muted cursor-pointer transition-colors"
+                className="p-1 hover:text-[#E30613] theme-text-muted cursor-pointer transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
@@ -178,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Primary CTA Button: [ Start Application ] in German Red */}
           <button
             onClick={handleStartApplication}
-            className="px-4 py-2 sm:py-2.5 bg-[#C90016] hover:bg-[#E00018] active:bg-[#A00012] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-[0_4px_16px_rgba(201,0,22,0.4)] transition-all duration-200 cursor-pointer flex items-center gap-1.5 transform hover:-translate-y-0.5 border border-red-400/40"
+            className="px-4 py-2 sm:py-2.5 bg-[#E30613] hover:bg-[#E00018] active:bg-[#A00012] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-[0_4px_16px_rgba(201,0,22,0.4)] transition-all duration-200 cursor-pointer flex items-center gap-1.5 transform hover:-translate-y-0.5 border border-red-400/40"
           >
             <span>Start Application</span>
             <ArrowRight className="w-3.5 h-3.5 hidden sm:inline stroke-[2.5]" />
@@ -256,7 +256,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isAuthenticated && user ? (
               <div className="flex items-center justify-between p-3 rounded-xl theme-bg-surface">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-[#C90016] text-white flex items-center justify-center font-bold text-xs">
+                  <div className="w-7 h-7 rounded-lg bg-[#E30613] text-white flex items-center justify-center font-bold text-xs">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -271,7 +271,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     signOut();
                     setMobileMenuOpen(false);
                   }}
-                  className="text-xs font-mono text-[#C90016] font-bold"
+                  className="text-xs font-mono text-[#E30613] font-bold"
                 >
                   Sign Out
                 </button>
@@ -288,7 +288,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={handleStartApplication}
-              className="w-full py-3 bg-[#C90016] text-white font-black text-sm rounded-xl flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#E30613] text-white font-black text-sm rounded-xl flex items-center justify-center gap-2"
             >
               <span>Start Application</span>
               <ArrowRight className="w-4 h-4" />

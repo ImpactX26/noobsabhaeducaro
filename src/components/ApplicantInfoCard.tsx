@@ -43,7 +43,7 @@ export const ApplicantInfoCard: React.FC<ApplicantInfoCardProps> = ({
               key={idx}
               className={`p-3.5 rounded-xl border transition-all ${
                 isMissing
-                  ? 'bg-red-500/10 border-red-500/40 text-[#C90016]'
+                  ? 'bg-red-500/10 border-red-500/40 text-[#E30613]'
                   : isConflict
                   ? 'bg-amber-500/10 border-amber-500/40 text-[#FFD21C]'
                   : 'theme-bg-surface theme-border hover:border-neutral-500'
@@ -55,7 +55,7 @@ export const ApplicantInfoCard: React.FC<ApplicantInfoCardProps> = ({
                     {field.label}
                   </span>
                   <div className="text-sm font-bold theme-text-main flex flex-wrap items-center gap-2">
-                    <span className={isMissing ? 'text-[#C90016] font-extrabold' : ''}>
+                    <span className={isMissing ? 'text-[#E30613] font-extrabold' : ''}>
                       {field.value}
                     </span>
                   </div>

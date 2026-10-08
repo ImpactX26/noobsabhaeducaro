@@ -101,7 +101,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 bg-[#C90016] hover:bg-[#E00018] active:bg-[#A00012] text-white px-5 py-3.5 rounded-full shadow-[0_6px_25px_rgba(201,0,22,0.45)] flex items-center gap-2.5 font-bold text-sm transition-all transform hover:scale-105 cursor-pointer border border-red-400/40 group"
+          className="fixed bottom-6 right-6 z-40 bg-[#E30613] hover:bg-[#E00018] active:bg-[#A00012] text-white px-5 py-3.5 rounded-full shadow-[0_6px_25px_rgba(201,0,22,0.45)] flex items-center gap-2.5 font-bold text-sm transition-all transform hover:scale-105 cursor-pointer border border-red-400/40 group"
           aria-label="Open SIEG.AI Copilot Chat"
         >
           <div className="w-2 h-2 rounded-full bg-[#FFD21C] animate-pulse shadow-[0_0_8px_#FFD21C]" />
@@ -116,7 +116,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
           {/* Header */}
           <div className="theme-bg-surface p-4 border-b theme-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#C90016] text-white flex items-center justify-center font-bold shadow-md">
+              <div className="w-9 h-9 rounded-xl bg-[#E30613] text-white flex items-center justify-center font-bold shadow-md">
                 <Bot className="w-5 h-5" />
               </div>
               <div>
@@ -153,7 +153,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                     className={`max-w-[85%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed shadow-sm ${
                       isAssistant
                         ? 'theme-bg-card theme-border border theme-text-main rounded-tl-xs'
-                        : 'bg-[#C90016] text-white rounded-tr-xs'
+                        : 'bg-[#E30613] text-white rounded-tr-xs'
                     }`}
                   >
                     {msg.text}
@@ -167,7 +167,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
 
             {isTyping && (
               <div className="flex items-center gap-2 text-xs theme-text-muted font-mono p-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#C90016] animate-bounce" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#E30613] animate-bounce" />
                 <div className="w-1.5 h-1.5 rounded-full bg-[#FFD21C] animate-bounce [animation-delay:0.2s]" />
                 <div className="w-1.5 h-1.5 rounded-full bg-neutral-400 animate-bounce [animation-delay:0.4s]" />
                 <span>SIEG.AI checking German regulations...</span>
@@ -203,12 +203,12 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Ask about German requirements, Anabin, GPA..."
-                className="flex-1 theme-bg-input border theme-border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm theme-text-main focus:outline-none focus:border-[#C90016] transition-colors"
+                className="flex-1 theme-bg-input border theme-border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm theme-text-main focus:outline-none focus:border-[#E30613] transition-colors"
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim()}
-                className="p-2.5 bg-[#C90016] hover:bg-[#E00018] text-white rounded-xl transition-all disabled:opacity-40 disabled:hover:bg-[#C90016] cursor-pointer"
+                className="p-2.5 bg-[#E30613] hover:bg-[#E00018] text-white rounded-xl transition-all disabled:opacity-40 disabled:hover:bg-[#E30613] cursor-pointer"
                 aria-label="Send query"
               >
                 <Send className="w-4 h-4" />

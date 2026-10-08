@@ -80,7 +80,7 @@ export const JourneyProgress: React.FC<JourneyProgressProps> = ({
                 <div
                   className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs font-mono font-bold transition-all shadow-xs ${
                     isCurrent
-                      ? 'bg-[#C90016] text-white ring-2 ring-[#FFD21C] shadow-[0_0_12px_rgba(201,0,22,0.5)] scale-105'
+                      ? 'bg-[#E30613] text-white ring-2 ring-[#FFD21C] shadow-[0_0_12px_rgba(227,6,19,0.5)] scale-105'
                       : isCompleted
                       ? 'theme-bg-card text-[#FFD21C] border border-[#FFD21C]/50'
                       : 'theme-bg-card theme-text-muted border theme-border'

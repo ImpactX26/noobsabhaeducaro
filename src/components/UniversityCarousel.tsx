@@ -30,7 +30,7 @@ export const UniversityCarousel: React.FC = () => {
           {duplicatedUniversities.map((uni, idx) => (
             <div
               key={`${uni.id}-${idx}`}
-              className="w-[320px] sm:w-[360px] h-[220px] theme-bg-card rounded-2xl border theme-border shadow-md hover:shadow-xl hover:border-[#C90016] transition-all duration-300 flex flex-col justify-between overflow-hidden p-6 shrink-0 group cursor-pointer"
+              className="w-[320px] sm:w-[360px] h-[220px] theme-bg-card rounded-2xl border theme-border shadow-md hover:shadow-xl hover:border-[#E30613] transition-all duration-300 flex flex-col justify-between overflow-hidden p-6 shrink-0 group cursor-pointer"
             >
               {/* Card Header with Image Thumbnail & Initials Badge */}
               <div className="flex items-start justify-between gap-3">
@@ -47,20 +47,20 @@ export const UniversityCarousel: React.FC = () => {
                     <span className="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded theme-bg-surface text-[#FFD21C] border theme-border">
                       {uni.initials}
                     </span>
-                    <h3 className="text-sm font-black theme-text-main truncate mt-1 group-hover:text-[#C90016] transition-colors">
+                    <h3 className="text-sm font-black theme-text-main truncate mt-1 group-hover:text-[#E30613] transition-colors">
                       {uni.shortName}
                     </h3>
                   </div>
                 </div>
 
-                <div className="w-7 h-7 rounded-full theme-bg-surface group-hover:bg-[#C90016] theme-text-muted group-hover:text-white flex items-center justify-center shrink-0 transition-colors border theme-border">
+                <div className="w-7 h-7 rounded-full theme-bg-surface group-hover:bg-[#E30613] theme-text-muted group-hover:text-white flex items-center justify-center shrink-0 transition-colors border theme-border">
                   <ArrowUpRight className="w-4 h-4" />
                 </div>
               </div>
 
               {/* Focus Area & Location */}
               <div className="space-y-1">
-                <div className="text-xs font-mono font-bold text-[#C90016] uppercase tracking-wide">
+                <div className="text-xs font-mono font-bold text-[#E30613] uppercase tracking-wide">
                   {uni.focus}
                 </div>
                 <div className="text-xs theme-text-muted">

@@ -18,7 +18,7 @@ export const RequirementCard: React.FC<RequirementCardProps> = ({
     <div
       className={`border rounded-2xl p-5 sm:p-6 transition-all shadow-xl ${
         isMissing
-          ? 'bg-red-500/10 border-[#C90016] ring-4 ring-red-500/10'
+          ? 'bg-red-500/10 border-[#E30613] ring-4 ring-red-500/10'
           : 'theme-bg-card theme-border hover:border-neutral-500'
       }`}
     >
@@ -29,13 +29,13 @@ export const RequirementCard: React.FC<RequirementCardProps> = ({
             className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
               isMet
                 ? 'theme-bg-surface text-[#FFD21C] border theme-border'
-                : 'bg-red-500/20 text-[#C90016] border border-red-500/40'
+                : 'bg-red-500/20 text-[#E30613] border border-red-500/40'
             }`}
           >
             {isMet ? (
               <CheckCircle2 className="w-5 h-5 text-[#FFD21C]" />
             ) : (
-              <AlertTriangle className="w-5 h-5 text-[#C90016]" />
+              <AlertTriangle className="w-5 h-5 text-[#E30613]" />
             )}
           </div>
 
@@ -49,7 +49,7 @@ export const RequirementCard: React.FC<RequirementCardProps> = ({
                 className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-md ${
                   isMet
                     ? 'theme-bg-surface text-[#FFD21C] border theme-border'
-                    : 'bg-red-500/20 text-[#C90016] border border-red-500/40'
+                    : 'bg-red-500/20 text-[#E30613] border border-red-500/40'
                 }`}
               >
                 {requirement.statusLabel}
@@ -76,7 +76,7 @@ export const RequirementCard: React.FC<RequirementCardProps> = ({
         {isMissing && onFixAction && (
           <button
             onClick={onFixAction}
-            className="px-4 py-2 bg-[#C90016] hover:bg-[#E00018] text-white text-xs font-mono font-bold rounded-xl transition-all shadow-md self-end sm:self-auto cursor-pointer"
+            className="px-4 py-2 bg-[#E30613] hover:bg-[#E00018] text-white text-xs font-mono font-bold rounded-xl transition-all shadow-md self-end sm:self-auto cursor-pointer"
           >
             Upload Now
           </button>

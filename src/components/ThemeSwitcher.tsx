@@ -49,7 +49,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
               aria-pressed={isSelected}
               className={`p-1.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer flex items-center justify-center ${
                 isSelected
-                  ? 'bg-[#C90016] text-white shadow-sm ring-1 ring-red-400/40'
+                  ? 'bg-[#E30613] text-white shadow-sm ring-1 ring-red-400/40'
                   : 'theme-text-muted hover:theme-text-main hover:theme-bg-surface'
               }`}
             >
@@ -77,7 +77,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
             aria-label={`Switch to ${opt.label} theme`}
             className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               isSelected
-                ? 'bg-[#C90016] text-white shadow-[0_2px_10px_rgba(201,0,22,0.35)]'
+                ? 'bg-[#E30613] text-white shadow-[0_2px_10px_rgba(201,0,22,0.35)]'
                 : 'theme-text-muted hover:theme-text-main hover:theme-bg-surface'
             }`}
           >

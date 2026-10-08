@@ -49,7 +49,9 @@ export class ClarificationsController {
   @Post(':clarificationId/answer')
   @ApiOperation({
     summary: 'Record the applicant’s answer',
-    description: 'Persists the answer and marks the clarification ANSWERED. Does not change evidence or re-evaluate (that is a later stage).',
+    description:
+      'Persists the answer and marks the clarification ANSWERED. For a conflict clarification the answer must be one of the existing options (by value, choice or text); ' +
+      'it is recorded as an additional applicant resolution claim and the applicant is re-evaluated (see `resolution` in the response). The document claims are never changed.',
   })
   answer(
     @Param('applicantId', ParseUUIDPipe) applicantId: string,

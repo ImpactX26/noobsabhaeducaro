@@ -203,7 +203,7 @@ describe('Agent: next best action (real PostgreSQL, real Arjun PDFs, scripted Cl
       expect(await prisma.clarification.count({ where: { applicantId } })).toBe(1);
     });
 
-    it('is not asked twice, and after the answer the agent waits instead of re-asking', async () => {
+    it('is not asked twice; once the applicant answers, the conflict is resolved and the agent moves on', async () => {
       const applicantId = await conflictingApplicant();
       const first = await decide(applicantId);
       const again = await decide(applicantId);
@@ -212,17 +212,19 @@ describe('Agent: next best action (real PostgreSQL, real Arjun PDFs, scripted Cl
       expect(await prisma.clarification.count({ where: { applicantId } })).toBe(1);
       expect(agentCalls()).toBe(1);
 
-      await http().post(`/applicants/${applicantId}/clarifications/${first.body.clarification.id}/answer`).send({ value: 2025, text: 'It is 2025' }).expect(201);
-      const after = await decide(applicantId);
-      expect(after.body.action).toMatchObject({ type: 'NO_ACTION', status: 'DONE' });
-      expect(after.body.message).toMatch(/Waiting/);
-      expect(agentCalls()).toBe(1); // no model call needed: nothing valid is left to choose
+      const answered = await http().post(`/applicants/${applicantId}/clarifications/${first.body.clarification.id}/answer`).send({ value: 2025, text: 'It is 2025' }).expect(201);
+      expect(answered.body.resolution.claim).toMatchObject({ isResolution: true, source: 'APPLICANT', rawValue: '2025' });
 
+      // the action that waited for the answer is settled, with its history kept
       const old = await prisma.agentAction.findUniqueOrThrow({ where: { id: first.body.action.id } });
       expect(old.status).toBe('ANSWERED');
       expect(old.answer).toMatchObject({ value: 2025 });
-      // answering did not touch evidence (applicant answers become claims in a later stage)
-      expect((await http().get(`/applicants/${applicantId}/gaps`).expect(200)).body.conflicts).toHaveLength(1);
+      expect((await http().get(`/applicants/${applicantId}/gaps`).expect(200)).body.conflicts).toEqual([]);
+
+      // the next decision is based on the new evaluation: nothing left to resolve, so the applicant is ready
+      const after = await decide(applicantId);
+      expect(after.body.action).toMatchObject({ type: 'RECOMMEND_NEXT_STEP', status: 'PENDING' });
+      expect(agentCalls()).toBe(2);
     });
   });
 

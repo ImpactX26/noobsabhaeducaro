@@ -1,0 +1,158 @@
+// Data model for the AI Applicant Copilot (MVP).
+// Derived data (field states, gaps) is NOT stored as rows - it is computed from
+// Claims and snapshotted as JSON inside Evaluation.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Stage {
+  INTAKE
+  AWAITING_DOCUMENTS
+  PROCESSING
+  AWAITING_APPLICANT
+  REVIEW_READY
+  ERROR
+}
+
+enum DocType {
+  CV
+  DEGREE
+  TRANSCRIPT
+  LANGUAGE_CERT
+  EXPERIENCE_LETTER
+  SOP
+  UNKNOWN
+}
+
+enum DocStatus {
+  UPLOADED
+  PROCESSING
+  DONE
+  FAILED
+}
+
+enum TextMethod {
+  TEXT_LAYER
+  OCR
+  VISION
+}
+
+enum ClaimSource {
+  DOCUMENT
+  APPLICANT
+  AI_DERIVED
+}
+
+enum ActionType {
+  ASK_APPLICANT
+  REQUEST_DOCUMENT
+  RESOLVE_CONFLICT
+  RECOMMEND_STEP
+  NO_ACTION
+}
+
+enum ActionStatus {
+  PENDING
+  ANSWERED
+  SUPERSEDED
+  DONE
+}
+
+model Applicant {
+  id           String        @id @default(uuid())
+  name         String
+  email        String?
+  goal         String?
+  programLabel String?
+  stage        Stage         @default(INTAKE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  documents    Document[]
+  claims       Claim[]
+  evaluations  Evaluation[]
+  actions      AgentAction[]
+}
+
+model Document {
+  id            String      @id @default(uuid())
+  applicantId   String
+  applicant     Applicant   @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  filename      String
+  storagePath   String
+  mime          String
+  docType       DocType     @default(UNKNOWN)
+  status        DocStatus   @default(UPLOADED)
+  error         String?
+  textMethod    TextMethod?
+  // [{ pageNo: number, text: string }]
+  pages         Json?
+  ocrConfidence Float?
+  createdAt     DateTime    @default(now())
+  claims        Claim[]
+
+  @@index([applicantId])
+}
+
+// Immutable evidence: rows are only ever appended (or marked superseded).
+model Claim {
+  id             String      @id @default(uuid())
+  applicantId    String
+  applicant      Applicant   @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  fieldKey       String // e.g. "degree.gpa"
+  entryKey       String? // distinguishes repeated items, e.g. "job-2"
+  rawValue       String
+  value          Json? // normalized value
+  source         ClaimSource
+  documentId     String?
+  document       Document?   @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  page           Int?
+  quote          String? // verbatim text from the document
+  isResolution   Boolean     @default(false) // explicit applicant choice for a conflict
+  supersededById String?
+  confidence     Float?
+  createdAt      DateTime    @default(now())
+
+  @@index([applicantId, fieldKey])
+}
+
+// Snapshot produced by each re-evaluation.
+model Evaluation {
+  id           String        @id @default(uuid())
+  applicantId  String
+  applicant    Applicant     @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  score        Int
+  verdict      String
+  fields       Json // key -> { state, value, claimIds }
+  gaps         Json // [{ id, kind, fieldKey?, requirementId?, severity }]
+  requirements Json // [{ id, status, credit, claimIds, aiRating? }]
+  breakdown    Json
+  createdAt    DateTime      @default(now())
+  actions      AgentAction[]
+
+  @@index([applicantId, createdAt])
+}
+
+model AgentAction {
+  id           String       @id @default(uuid())
+  applicantId  String
+  applicant    Applicant    @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  evaluationId String?
+  evaluation   Evaluation?  @relation(fields: [evaluationId], references: [id], onDelete: SetNull)
+  type         ActionType
+  gapId        String?
+  params       Json?
+  decision     Json? // full validated LLM output + fallbackUsed flag
+  status       ActionStatus @default(PENDING)
+  answer       Json?
+  createdAt    DateTime     @default(now())
+  answeredAt   DateTime?
+
+  @@index([applicantId, status])
+}

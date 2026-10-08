@@ -3,9 +3,13 @@
 import EmbeddedPostgres from 'embedded-postgres';
 import { existsSync } from 'node:fs';
 
+import 'dotenv/config';
+
 const dir = './.pgdata';
-const port = 5433;
-const database = 'ai_applicant';
+// Port and database name come from DATABASE_URL so it can't drift from the app config.
+const url = new URL(process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5433/ai_applicant');
+const port = Number(url.port || 5433);
+const database = url.pathname.slice(1);
 
 const pg = new EmbeddedPostgres({
   databaseDir: dir,

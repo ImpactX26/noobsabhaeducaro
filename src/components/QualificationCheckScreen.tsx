@@ -9,6 +9,9 @@ import {
 } from 'lucide-react';
 
 interface QualificationCheckScreenProps {
+  applicantName: string;
+  /** Shown under the list: the backend's note that these are DEMO requirements. */
+  disclaimer?: string;
   requirements: QualificationRequirement[];
   onContinueToNextAction: () => void;
   onBackToProfile: () => void;
@@ -16,12 +19,16 @@ interface QualificationCheckScreenProps {
 }
 
 export const QualificationCheckScreen: React.FC<QualificationCheckScreenProps> = ({
+  applicantName,
+  disclaimer,
   requirements,
   onContinueToNextAction,
   onBackToProfile,
   onFixRequirement,
 }) => {
-  const missingCount = requirements.filter((r) => r.status === 'missing').length;
+  const attention = requirements.filter((r) => r.status !== 'met');
+  const metCount = requirements.length - attention.length;
+  const first = attention[0];
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8 theme-text-main">
@@ -36,25 +43,31 @@ export const QualificationCheckScreen: React.FC<QualificationCheckScreenProps> =
           Qualification Check
         </h1>
         <p className="text-sm theme-text-muted">
-          Cross-checking Rahul Sharma's credentials against Master's admission requirements in Germany.
+          Cross-checking {applicantName || 'your'} credentials against the application requirements, based on your documents.
         </p>
       </div>
 
       {/* Prominent Highlighting for Missing Requirement */}
-      {missingCount > 0 && (
+      {requirements.length === 0 && (
+        <div className="theme-bg-card border theme-border rounded-2xl p-6 text-sm theme-text-muted">
+          Your documents have not been evaluated yet. Upload them and run the scan to see your requirements here.
+        </div>
+      )}
+
+      {attention.length > 0 && (
         <div className="bg-red-500/10 border-2 border-[#E30613] rounded-3xl p-6 sm:p-8 shadow-2xl flex items-start gap-4">
           <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-[#E30613] flex items-center justify-center shrink-0 border border-red-500/30">
             <AlertTriangle className="w-6 h-6 text-[#E30613]" />
           </div>
           <div className="space-y-1.5 flex-1">
             <div className="text-xs font-mono font-extrabold text-[#E30613] uppercase tracking-wider">
-              Admission Action Required
+              Action Required
             </div>
             <h3 className="text-xl font-black theme-text-main">
-              Your application is missing proof of language proficiency.
+              {first.title}: {first.statusLabel.toLowerCase()}
             </h3>
             <p className="text-sm theme-text-muted leading-relaxed">
-              3 of 4 requirements are successfully met. German universities and Uni-Assist require an official language certificate before issuing an admission offer.
+              {metCount} of {requirements.length} requirements are met. {first.explanation}
             </p>
           </div>
         </div>
@@ -74,6 +87,8 @@ export const QualificationCheckScreen: React.FC<QualificationCheckScreenProps> =
           />
         ))}
       </div>
+
+      {disclaimer && <p className="text-[11px] font-mono theme-text-muted">{disclaimer}</p>}
 
       {/* Footer Navigation */}
       <div className="pt-4 flex items-center justify-between gap-4 border-t theme-border">

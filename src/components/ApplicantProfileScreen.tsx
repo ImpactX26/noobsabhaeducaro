@@ -13,12 +13,14 @@ import {
 } from 'lucide-react';
 
 interface ApplicantProfileScreenProps {
+  applicantName: string;
   sections: ProfileSection[];
   onContinueToQualification: () => void;
   onBack?: () => void;
 }
 
 export const ApplicantProfileScreen: React.FC<ApplicantProfileScreenProps> = ({
+  applicantName,
   sections,
   onContinueToQualification,
   onBack,
@@ -55,13 +57,13 @@ export const ApplicantProfileScreen: React.FC<ApplicantProfileScreenProps> = ({
               Applicant Profile
             </h1>
             <p className="text-sm theme-text-muted">
-              Information extracted by AI from Rahul Sharma's submitted documents and declarations.
+              Information extracted from {applicantName || 'your'} submitted documents and declarations, each with its source.
             </p>
           </div>
 
           <div className="flex items-center gap-2 text-xs font-mono theme-text-muted">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-            <span>KMK H+ Verified Status</span>
+            <span>Every fact shows where it came from</span>
           </div>
         </div>
       </div>

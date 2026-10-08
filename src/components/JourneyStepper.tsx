@@ -12,7 +12,7 @@ const journeyStages: { id: JourneyStage; label: string; description: string; ste
   { id: 'check', label: 'Check', description: 'Audited Criteria', stepNumber: 2 },
   { id: 'find-gap', label: 'Find Gap', description: 'Identified Missing Proof', stepNumber: 3 },
   { id: 'decide', label: 'Decide', description: 'Calculated Solution', stepNumber: 4 },
-  { id: 'act', label: 'Act', description: 'Upload Certificate', stepNumber: 5 },
+  { id: 'act', label: 'Act', description: 'Take the next step', stepNumber: 5 },
 ];
 
 export const JourneyStepper: React.FC<JourneyStepperProps> = ({

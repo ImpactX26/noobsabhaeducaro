@@ -5,7 +5,7 @@ import { ApplicantForm } from './ApplicantForm';
 interface ApplicantDetailsScreenProps {
   details: ApplicantDetails;
   onUpdate: (details: ApplicantDetails) => void;
-  onContinue: () => void;
+  onContinue: () => void | Promise<void>;
   onBack: () => void;
 }
 

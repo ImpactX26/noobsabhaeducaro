@@ -1,41 +1,30 @@
 import React, { useState } from 'react';
 import { JourneyStage } from '../types';
 import { JourneyStepper } from './JourneyStepper';
-import { NextActionCard } from './NextActionCard';
-import {
-  Upload,
-  X,
-  FileCheck2,
-  CheckCircle2,
-  ArrowLeft,
-  Sparkles,
-} from 'lucide-react';
+import { AgentActionPanel } from './AgentActionPanel';
+import { useJourney } from '../journey/JourneyContext';
+import { ArrowLeft, Sparkles, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 
 interface NextActionScreenProps {
   onBackToQualification: () => void;
-  onCertificateUploadedStateChange: (uploaded: boolean) => void;
-  isCertificateUploaded: boolean;
 }
 
-export const NextActionScreen: React.FC<NextActionScreenProps> = ({
-  onBackToQualification,
-  onCertificateUploadedStateChange,
-  isCertificateUploaded,
-}) => {
+/** The backend agent's next-best-action, plus everything the backend still lists as open. */
+export const NextActionScreen: React.FC<NextActionScreenProps> = ({ onBackToQualification }) => {
   const [activeStage, setActiveStage] = useState<JourneyStage>('act');
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedCertificateName, setSelectedCertificateName] = useState<string>(
-    'IELTS_Academic_Score_7.5_TRF.pdf'
-  );
+  const { journey, busy, error, askAgent } = useJourney();
+  const [askError, setAskError] = useState<string | null>(null);
 
-  const handleSimulateUpload = (certName: string) => {
-    setSelectedCertificateName(certName);
-    onCertificateUploadedStateChange(true);
-    setShowUploadModal(false);
-  };
+  const openItems = journey?.gaps ?? [];
+  const evaluated = Boolean(journey?.evaluation);
 
-  const handleReset = () => {
-    onCertificateUploadedStateChange(false);
+  const askAgain = async () => {
+    setAskError(null);
+    try {
+      await askAgent({ refresh: true });
+    } catch (e) {
+      setAskError(e instanceof Error ? e.message : 'The agent could not decide right now');
+    }
   };
 
   return (
@@ -48,33 +37,56 @@ export const NextActionScreen: React.FC<NextActionScreenProps> = ({
         </div>
       </div>
 
-      {/* Journey Stepper */}
-      <JourneyStepper
-        currentStage={activeStage}
-        onSelectStage={setActiveStage}
-      />
+      <JourneyStepper currentStage={activeStage} onSelectStage={setActiveStage} />
 
-      {/* Main Focus: Next Action Card */}
-      <NextActionCard
-        onUploadClick={() => setShowUploadModal(true)}
-        isCertificateUploaded={isCertificateUploaded}
-        onResetSimulation={handleReset}
-      />
-
-      {/* Interactive Testing Sandbox Notice */}
-      <div className="p-4 rounded-2xl theme-bg-card border theme-border space-y-2 text-xs">
-        <div className="flex items-center justify-between">
-          <span className="font-mono font-bold text-[#E30613] uppercase">
-            Interactive Prototype Sandbox
-          </span>
-          <span className="theme-text-muted">Test state propagation</span>
-        </div>
-        <p className="theme-text-muted">
-          Clicking "Simulate Upload" will immediately verify IELTS Band 7.5, update your readiness score to 100%, and remove the language blocker across your Dashboard and Profile.
+      {error && (
+        <p role="alert" className="text-sm text-[#E30613] bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+          {error}
         </p>
-      </div>
+      )}
 
-      {/* Back to Qualification check */}
+      {/* Main focus: the agent's single next action */}
+      <AgentActionPanel onOpenQualification={onBackToQualification} />
+
+      {/* Everything the backend still lists as open (the agent picks ONE of these) */}
+      {evaluated && (
+        <div className="p-5 rounded-2xl theme-bg-card border theme-border space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider theme-text-muted">
+              Open items on your application ({openItems.length})
+            </span>
+            <button
+              onClick={askAgain}
+              disabled={busy !== 'idle'}
+              className="text-xs font-mono px-3 py-1.5 rounded-lg theme-bg-surface hover:theme-bg-subtle border theme-border theme-text-main flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+            >
+              {busy === 'thinking' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              <span>Ask the agent again</span>
+            </button>
+          </div>
+          {openItems.length === 0 ? (
+            <p className="text-sm theme-text-muted">Nothing is open — all checks passed.</p>
+          ) : (
+            <ul className="space-y-2">
+              {openItems.map((g) => (
+                <li key={g.id} className="flex items-start gap-2.5 text-sm theme-text-main">
+                  <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${g.severity === 'BLOCKING' ? 'text-[#E30613]' : 'text-[#FFD21C]'}`} />
+                  <span>
+                    {g.message}
+                    <span className="ml-2 text-[10px] font-mono theme-text-muted uppercase">{g.kind.replace('_', ' ')}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {askError && (
+            <p role="alert" className="text-xs text-[#E30613] bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+              {askError}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="pt-2 border-t theme-border flex justify-start">
         <button
           onClick={onBackToQualification}
@@ -84,67 +96,6 @@ export const NextActionScreen: React.FC<NextActionScreenProps> = ({
           <span>Back to Qualification Check</span>
         </button>
       </div>
-
-      {/* Upload Modal (Simulation) */}
-      {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="theme-bg-card border theme-border rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl relative">
-            <button
-              onClick={() => setShowUploadModal(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl theme-text-muted hover:theme-text-main hover:theme-bg-surface cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-1">
-              <span className="text-xs font-mono text-[#E30613] font-bold uppercase">
-                Document Upload
-              </span>
-              <h3 className="text-xl font-black theme-text-main uppercase">
-                Attach Language Certificate
-              </h3>
-              <p className="text-xs theme-text-muted">
-                Select a verified credential to simulate instantaneous clearance.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={() => handleSimulateUpload('IELTS_Academic_Score_7.5_TRF.pdf')}
-                className="w-full p-4 rounded-xl theme-bg-surface hover:theme-bg-subtle border theme-border hover:border-[#FFD21C] text-left transition-all cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-sm font-bold theme-text-main">IELTS Academic (Band 7.5)</div>
-                  <div className="text-xs theme-text-muted font-mono">TRF #984210 · Band 7.5 (CEFR C1)</div>
-                </div>
-                <Upload className="w-4 h-4 text-[#FFD21C]" />
-              </button>
-
-              <button
-                onClick={() => handleSimulateUpload('TOEFL_iBT_Score_105.pdf')}
-                className="w-full p-4 rounded-xl theme-bg-surface hover:theme-bg-subtle border theme-border hover:border-[#FFD21C] text-left transition-all cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-sm font-bold theme-text-main">TOEFL iBT (105 / 120)</div>
-                  <div className="text-xs theme-text-muted font-mono">Official Score Report</div>
-                </div>
-                <Upload className="w-4 h-4 text-[#FFD21C]" />
-              </button>
-
-              <button
-                onClick={() => handleSimulateUpload('Goethe_Zertifikat_C1.pdf')}
-                className="w-full p-4 rounded-xl theme-bg-surface hover:theme-bg-subtle border theme-border hover:border-[#FFD21C] text-left transition-all cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-sm font-bold theme-text-main">Goethe-Zertifikat C1</div>
-                  <div className="text-xs theme-text-muted font-mono">German Academic Level</div>
-                </div>
-                <Upload className="w-4 h-4 text-[#FFD21C]" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

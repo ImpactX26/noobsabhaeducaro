@@ -10,61 +10,48 @@ import {
   X,
   FileCheck,
   Sparkles,
+  Loader2,
 } from 'lucide-react';
 
 interface DocumentUploadScreenProps {
   documents: DocumentItem[];
-  onUpdateDocuments: (docs: DocumentItem[]) => void;
+  /** Uploads one file to the backend for the given slot. Rejects with a readable message. */
+  onUpload: (docId: string, file: File) => Promise<void>;
   onContinue: () => void;
   onBack: () => void;
 }
 
+const PROCESSING_LABEL: Record<NonNullable<DocumentItem['processingStatus']>, string> = {
+  UPLOADED: 'Uploaded · waiting for scan',
+  PROCESSING: 'Scanning…',
+  DONE: 'Scanned',
+  FAILED: 'Scan failed',
+};
+
 export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
   documents,
-  onUpdateDocuments,
+  onUpload,
   onContinue,
   onBack,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeDocId, setActiveDocId] = React.useState<string | null>(null);
+  const [uploadingId, setUploadingId] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleSimulateUpload = (id: string, customFileName?: string) => {
-    const updated = documents.map((doc) => {
-      if (doc.id === id) {
-        return {
-          ...doc,
-          status: 'uploaded' as const,
-          fileName: customFileName || `${doc.name.replace(/\s+/g, '_')}_Verified.pdf`,
-          fileSize: '1.8 MB',
-          uploadedAt: 'Just now',
-        };
-      }
-      return doc;
-    });
-    onUpdateDocuments(updated);
-  };
-
-  const handleToggleMissing = (id: string) => {
-    const updated = documents.map((doc) => {
-      if (doc.id === id) {
-        return {
-          ...doc,
-          status: (doc.status === 'uploaded' ? 'missing' : 'uploaded') as 'uploaded' | 'missing',
-          fileName: doc.status === 'missing' ? `${doc.name.replace(/\s+/g, '_')}_Official.pdf` : undefined,
-          fileSize: doc.status === 'missing' ? '2.1 MB' : undefined,
-          uploadedAt: doc.status === 'missing' ? 'Just now' : undefined,
-        };
-      }
-      return doc;
-    });
-    onUpdateDocuments(updated);
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && activeDocId) {
-      const file = e.target.files[0];
-      handleSimulateUpload(activeDocId, file.name);
-      setActiveDocId(null);
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const docId = activeDocId;
+    setActiveDocId(null);
+    if (!file || !docId) return;
+    setError(null);
+    setUploadingId(docId);
+    try {
+      await onUpload(docId, file);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploadingId(null);
     }
   };
 
@@ -81,7 +68,7 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8 theme-text-main">
-      {/* Hidden file input for interactive simulation */}
+      {/* Hidden file input: files go to the backend */}
       <input
         type="file"
         ref={fileInputRef}
@@ -147,6 +134,12 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
         </div>
       )}
 
+      {error && (
+        <p role="alert" className="text-sm text-[#E30613] bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+          {error}
+        </p>
+      )}
+
       {/* Document Items List */}
       <div className="space-y-3">
         {documents.map((doc) => {
@@ -190,34 +183,37 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
                       <div className="pt-1 flex items-center gap-3 text-[11px] font-mono theme-text-muted">
                         <span className="text-[#FFD21C] font-semibold">{doc.fileName}</span>
                         <span>·</span>
-                        <span>{doc.fileSize}</span>
-                        <span>·</span>
-                        <span className="text-emerald-500 flex items-center gap-1 font-bold">
-                          <CheckCircle2 className="w-3 h-3" /> Ready
+                        <span
+                          className={`flex items-center gap-1 font-bold ${
+                            doc.processingStatus === 'FAILED' ? 'text-[#E30613]' : doc.processingStatus === 'DONE' ? 'text-emerald-500' : 'theme-text-muted'
+                          }`}
+                        >
+                          {doc.processingStatus === 'DONE' && <CheckCircle2 className="w-3 h-3" />}
+                          {doc.processingStatus === 'FAILED' && <AlertTriangle className="w-3 h-3" />}
+                          {doc.processingStatus ? PROCESSING_LABEL[doc.processingStatus] : 'Uploaded'}
                         </span>
                       </div>
+                    )}
+                    {doc.processingStatus === 'FAILED' && doc.error && (
+                      <p className="pt-1 text-[11px] text-[#E30613] leading-snug">{doc.error}</p>
                     )}
                   </div>
                 </div>
 
                 {/* Upload or Toggle Buttons */}
                 <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 font-mono text-xs">
-                  {isUploaded ? (
-                    <button
-                      onClick={() => handleToggleMissing(doc.id)}
-                      className="px-3 py-2 rounded-xl theme-bg-surface hover:theme-bg-subtle border theme-border theme-text-muted hover:theme-text-main transition-colors cursor-pointer"
-                    >
-                      Remove
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => triggerUploadClick(doc.id)}
-                      className="px-4 py-2.5 rounded-xl bg-[#E30613] hover:bg-[#E00018] text-white font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>Upload File</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => triggerUploadClick(doc.id)}
+                    disabled={uploadingId !== null}
+                    className={`px-4 py-2.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                      isUploaded
+                        ? 'theme-bg-surface hover:theme-bg-subtle border theme-border theme-text-muted hover:theme-text-main shadow-none'
+                        : 'bg-[#E30613] hover:bg-[#E00018] text-white'
+                    }`}
+                  >
+                    {uploadingId === doc.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                    <span>{uploadingId === doc.id ? 'Uploading…' : isUploaded ? 'Upload another' : 'Upload File'}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -237,7 +233,8 @@ export const DocumentUploadScreen: React.FC<DocumentUploadScreenProps> = ({
 
         <button
           onClick={onContinue}
-          className="px-8 py-3.5 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
+          disabled={uploadedCount === 0 || uploadingId !== null}
+          className="px-8 py-3.5 bg-[#E30613] hover:bg-[#E00018] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
         >
           <span>Launch AI Document Scan</span>
           <ArrowRight className="w-4 h-4" />

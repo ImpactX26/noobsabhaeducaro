@@ -24,6 +24,12 @@ export interface DocumentItem {
   fileName?: string;
   fileSize?: string;
   uploadedAt?: string;
+  /** Backend document type this slot maps to (set by the journey mapper). */
+  docType?: string;
+  /** Backend processing status of the uploaded file. */
+  processingStatus?: 'UPLOADED' | 'PROCESSING' | 'DONE' | 'FAILED';
+  /** Backend error message when processing failed. */
+  error?: string;
 }
 
 // Provenance labels for information origin

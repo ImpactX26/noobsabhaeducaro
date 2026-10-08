@@ -12,7 +12,8 @@ import {
 interface ApplicantFormProps {
   details: ApplicantDetails;
   onUpdate: (details: ApplicantDetails) => void;
-  onContinue: () => void;
+  /** May be async: the form shows a saving state and any error it throws. */
+  onContinue: () => void | Promise<void>;
   onBack: () => void;
 }
 
@@ -24,6 +25,8 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<ApplicantDetails>(details);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleGoalChange = (newGoal: ApplicantGoal) => {
     const updated = {
@@ -45,7 +48,7 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
@@ -73,7 +76,15 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
     }
 
     onUpdate(formData);
-    onContinue();
+    setSubmitError(null);
+    setSaving(true);
+    try {
+      await onContinue();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Could not save your details');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -203,6 +214,12 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
           </div>
         </div>
 
+        {submitError && (
+          <p role="alert" className="text-sm text-[#E30613] bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+            {submitError}
+          </p>
+        )}
+
         {/* Buttons */}
         <div className="pt-4 flex items-center justify-between gap-4 border-t theme-border">
           <button
@@ -216,9 +233,10 @@ export const ApplicantForm: React.FC<ApplicantFormProps> = ({
 
           <button
             type="submit"
-            className="px-8 py-3.5 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
+            disabled={saving}
+            className="px-8 py-3.5 bg-[#E30613] hover:bg-[#E00018] disabled:opacity-60 text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
           >
-            <span>Proceed to Consent</span>
+            <span>{saving ? 'Saving…' : 'Proceed to Consent'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

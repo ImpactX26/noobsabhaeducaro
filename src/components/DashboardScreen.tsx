@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ApplicantDetails,
   DocumentItem,
@@ -6,30 +6,25 @@ import {
   DashboardStats,
 } from '../types';
 import {
-  ShieldCheck,
   ArrowRight,
   AlertTriangle,
   CheckCircle2,
-  Sparkles,
   Bot,
-  Upload,
-  Check,
   Compass,
-  X,
 } from 'lucide-react';
+import { AgentActionPanel } from './AgentActionPanel';
+import { useJourney } from '../journey/JourneyContext';
 
 interface DashboardScreenProps {
   details: ApplicantDetails;
   documents: DocumentItem[];
   requirements: QualificationRequirement[];
   stats: DashboardStats;
-  isCertificateUploaded: boolean;
   onNavigateToProfile: () => void;
   onNavigateToDocuments: () => void;
   onNavigateToQualification: () => void;
   onNavigateToNextAction: () => void;
   onOpenChatbot: () => void;
-  onUploadCertificate: (certName: string) => void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -37,37 +32,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   documents,
   requirements,
   stats,
-  isCertificateUploaded,
   onNavigateToProfile,
   onNavigateToDocuments,
   onNavigateToQualification,
   onNavigateToNextAction,
   onOpenChatbot,
-  onUploadCertificate,
 }) => {
-  const [showUploadModal, setShowUploadModal] = useState(false);
+  const { journey, error } = useJourney();
 
-  // Dynamic calculations based on state
-  const uploadedCount = isCertificateUploaded
-    ? documents.length
-    : documents.filter((d) => d.status === 'uploaded').length;
-  const missingCount = isCertificateUploaded
-    ? 0
-    : documents.filter((d) => d.status === 'missing').length;
-
-  const metReqCount = isCertificateUploaded
-    ? requirements.length
-    : requirements.filter((r) => r.status === 'met').length;
-  const attentionReqCount = isCertificateUploaded
-    ? 0
-    : requirements.filter((r) => r.status === 'missing').length;
-
-  const currentProgress = isCertificateUploaded ? 100 : stats.progressPercentage;
-
-  const handleSimulateUpload = (certName: string) => {
-    onUploadCertificate(certName);
-    setShowUploadModal(false);
-  };
+  // every number below comes from the backend journey (via the mapper)
+  const uploadedCount = stats.documentsUploadedCount;
+  const missingCount = stats.documentsMissingCount;
+  const metReqCount = stats.requirementsMetCount;
+  const attentionReqCount = stats.requirementsAttentionCount;
+  const currentProgress = stats.progressPercentage;
+  const verdict = journey?.evaluation?.verdict;
+  const evaluated = Boolean(journey?.evaluation);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10 theme-text-main">
@@ -99,13 +79,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </div>
           <div>
             <div className="text-xs font-bold theme-text-main flex items-center gap-2">
-              <span>{details.fullName || 'Rahul Sharma'}</span>
+              <span>{details.fullName || 'Applicant'}</span>
               <span className="text-[10px] font-mono px-1.5 py-0.2 theme-bg-surface text-[#FFD21C] border theme-border rounded">
                 DE 🇩🇪
               </span>
             </div>
             <div className="text-[11px] font-mono theme-text-muted truncate max-w-[200px]">
-              {details.targetInstitution || 'TUM Munich'}
+              {details.targetInstitution || '—'}
             </div>
           </div>
         </div>
@@ -128,7 +108,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {currentProgress}%
             </span>
             <span className="text-xs font-mono theme-text-muted">
-              {currentProgress === 100 ? 'Fully Ready' : 'In Progress'}
+              {verdict === 'READY' ? 'Ready' : stats.profileStatus}
             </span>
           </div>
         </div>
@@ -143,8 +123,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </div>
           <div className="flex justify-between text-[11px] font-mono theme-text-muted">
             <span>Dossier Inception</span>
-            <span className="text-[#FFD21C] font-semibold">Bavarian Calculation</span>
-            <span>Uni-Assist & Visa Ready</span>
+            <span className="text-[#FFD21C] font-semibold">{evaluated ? 'Evaluated' : 'Not evaluated yet'}</span>
+            <span>Application ready</span>
           </div>
         </div>
       </div>
@@ -201,9 +181,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </div>
 
           <div className="text-xs font-mono flex items-center gap-1.5">
-            {attentionReqCount === 0 ? (
+            {!evaluated ? (
+              <span className="theme-text-muted font-bold">Not evaluated yet</span>
+            ) : attentionReqCount === 0 ? (
               <span className="text-emerald-500 font-bold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> 100% Satisfied
+                <CheckCircle2 className="w-3.5 h-3.5" /> All satisfied
               </span>
             ) : (
               <span className="text-[#FFD21C] font-bold flex items-center gap-1">
@@ -223,89 +205,28 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               Target
             </span>
             <span className="text-[10px] font-mono text-[#FFD21C] bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
-              TU9
+              {details.goal === 'work' ? 'WORK' : 'STUDY'}
             </span>
           </div>
 
           <div className="text-2xl font-black theme-text-main truncate">
-            {details.targetInstitution || 'TUM Munich'}
+            {details.targetInstitution || '—'}
           </div>
 
           <div className="text-xs font-mono theme-text-muted">
-            {details.goal === 'work' ? 'EU Blue Card Track' : "M.Sc. Data Engineering"}
+            {details.intendedField || (details.goal === 'work' ? 'Employment' : 'Study')}
           </div>
         </div>
       </div>
 
-      {/* Primary Directive Banner: Your Next Action */}
-      <div
-        className={`border-2 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl transition-all ${
-          isCertificateUploaded
-            ? 'theme-bg-card border-emerald-500/80 shadow-emerald-500/5'
-            : 'theme-bg-surface border-[#E30613] shadow-red-500/10'
-        }`}
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded bg-[#E30613] text-white font-mono font-extrabold text-[10px] uppercase tracking-wider">
-                Priority Directive
-              </span>
-              <span className="text-xs font-mono theme-text-muted">
-                {isCertificateUploaded ? 'Application Complete' : 'Urgent Requirement'}
-              </span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black theme-text-main tracking-tight uppercase">
-              {isCertificateUploaded
-                ? 'All Requirements Met — Ready for Submission'
-                : 'Upload Your Language Certificate'}
-            </h2>
-          </div>
-
-          {/* Action Trigger */}
-          {!isCertificateUploaded ? (
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className="px-6 py-3.5 bg-[#E30613] hover:bg-[#E00018] text-white font-black text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
-            >
-              <Upload className="w-4 h-4" />
-              <span>Upload Certificate</span>
-            </button>
-          ) : (
-            <div className="px-5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-500 font-mono font-bold text-xs flex items-center gap-2">
-              <Check className="w-4 h-4 stroke-[3]" />
-              <span>Verified C1 Proficiency</span>
-            </div>
-          )}
-        </div>
-
-        <p className="text-sm theme-text-muted max-w-2xl leading-relaxed">
-          {isCertificateUploaded
-            ? 'Your official language credential satisfies German university requirements. Your portfolio is cleared for submission.'
-            : 'German Master\'s programs require an official IELTS, TOEFL, or Goethe test score to issue an admission offer.'}
+      {error && (
+        <p role="alert" className="text-sm text-[#E30613] bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+          {error}
         </p>
+      )}
 
-        {/* Quick Simulation Trigger */}
-        {!isCertificateUploaded && (
-          <div className="pt-2 flex flex-wrap items-center gap-3 border-t theme-border">
-            <span className="text-xs font-mono theme-text-muted">Simulate Instant Upload:</span>
-            <button
-              onClick={() => handleSimulateUpload('IELTS_Academic_Score_7.5_TRF.pdf')}
-              className="text-xs font-mono px-3 py-1.5 rounded-lg theme-bg-card hover:theme-bg-subtle border theme-border theme-text-main transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#FFD21C]" />
-              <span>IELTS Band 7.5 (TRF #984210)</span>
-            </button>
-            <button
-              onClick={() => handleSimulateUpload('TOEFL_iBT_Score_105.pdf')}
-              className="text-xs font-mono px-3 py-1.5 rounded-lg theme-bg-card hover:theme-bg-subtle border theme-border theme-text-main transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#FFD21C]" />
-              <span>TOEFL iBT 105</span>
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Primary Directive: the backend agent's single next action */}
+      <AgentActionPanel onOpenQualification={onNavigateToQualification} />
 
       {/* Four Deep-Dive Quick Action Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -399,66 +320,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </button>
       </div>
 
-      {/* Upload Modal (Simulation) */}
-      {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="theme-bg-card border theme-border rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl relative">
-            <button
-              onClick={() => setShowUploadModal(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl theme-text-muted hover:theme-text-main hover:theme-bg-surface cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-1">
-              <span className="text-xs font-mono text-[#E30613] font-bold uppercase">
-                Document Upload
-              </span>
-              <h3 className="text-xl font-black theme-text-main uppercase">
-                Submit Language Certificate
-              </h3>
-              <p className="text-xs theme-text-muted">
-                Attach your official score report to clear the language deficiency.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <button
-                onClick={() => handleSimulateUpload('IELTS_Academic_Score_7.5_TRF.pdf')}
-                className="w-full p-4 rounded-xl theme-bg-surface hover:theme-bg-subtle border theme-border hover:border-[#FFD21C] text-left transition-all cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-sm font-bold theme-text-main">IELTS Academic (Band 7.5)</div>
-                  <div className="text-xs theme-text-muted font-mono">TRF #984210 · Official Test Report</div>
-                </div>
-                <Upload className="w-4 h-4 text-[#FFD21C]" />
-              </button>
-
-              <button
-                onClick={() => handleSimulateUpload('TOEFL_iBT_Score_105.pdf')}
-                className="w-full p-4 rounded-xl theme-bg-surface hover:theme-bg-subtle border theme-border hover:border-[#FFD21C] text-left transition-all cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-sm font-bold theme-text-main">TOEFL iBT (105 / 120)</div>
-                  <div className="text-xs theme-text-muted font-mono">ETS Official Score Card</div>
-                </div>
-                <Upload className="w-4 h-4 text-[#FFD21C]" />
-              </button>
-
-              <button
-                onClick={() => handleSimulateUpload('Goethe_Zertifikat_C1.pdf')}
-                className="w-full p-4 rounded-xl theme-bg-surface hover:theme-bg-subtle border theme-border hover:border-[#FFD21C] text-left transition-all cursor-pointer flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-sm font-bold theme-text-main">Goethe-Zertifikat C1</div>
-                  <div className="text-xs theme-text-muted font-mono">German Language Proficiency</div>
-                </div>
-                <Upload className="w-4 h-4 text-[#FFD21C]" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

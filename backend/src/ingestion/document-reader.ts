@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type Anthropic from '@anthropic-ai/sdk';
-import { LlmService } from '../llm/llm.service';
+import { LlmContentBlock, LlmService } from '../llm/llm.service';
 import { TRANSCRIPTION_SCHEMA, TRANSCRIPTION_SYSTEM_PROMPT } from './extraction.schema';
 import { assessTextLayer, extractPdfPages, type PageText } from './pdf-text';
 
@@ -83,9 +82,9 @@ export class DocumentReader {
     return { pages: [{ pageNo: 1, text, method: 'VISION' }], textMethod: 'VISION', textLayer: 'IMAGE' };
   }
 
-  private async transcribe(block: Anthropic.ContentBlockParam, label: string): Promise<PageText[]> {
+  private async transcribe(block: LlmContentBlock, label: string): Promise<PageText[]> {
     if (!this.llm.isConfigured) {
-      throw new IngestionError('This document has no selectable text and needs Claude vision, but ANTHROPIC_API_KEY is not configured');
+      throw new IngestionError('This document has no selectable text and needs Claude vision, but OPENROUTER_API_KEY is not configured');
     }
     const out = (await this.llm.completeJson({
       system: TRANSCRIPTION_SYSTEM_PROMPT,

@@ -331,7 +331,8 @@ export function validateDecision(raw: unknown, candidates: Candidate[], state: A
   }
 
   // wording: no unsupported numbers/dates, no promises, DEMO labelling
-  const supported = new Set(JSON.stringify(context, (k, v) => (k === 'evidenceRefs' ? undefined : v)).match(NUMBER) ?? []);
+  // Ids (uuids contain digit runs) are not facts: they must not license numbers in the message.
+  const supported = new Set(JSON.stringify(context, (k, v) => (k === 'evidenceRefs' || /Ids?$/.test(k) ? undefined : v)).match(NUMBER) ?? []);
   for (const n of `${message} ${rationale}`.match(NUMBER) ?? []) if (!supported.has(n)) fail(`UNSUPPORTED_NUMBER:${n}`);
   if (OVERPROMISE.test(`${message} ${rationale}`)) fail('OVERPROMISE');
   if ((action === 'RECOMMEND_NEXT_STEP' || action === 'SHOW_MISSING_REQUIREMENT') && !/demo/i.test(message)) fail('MISSING_DEMO_LABEL');

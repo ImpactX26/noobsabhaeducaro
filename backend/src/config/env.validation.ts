@@ -10,12 +10,16 @@ export class EnvironmentVariables {
   @IsString()
   DATABASE_URL!: string;
 
+  // Claude through OpenRouter (https://openrouter.ai). Without a key, LLM-backed steps fail gracefully.
   @IsOptional()
   @IsString()
-  ANTHROPIC_API_KEY?: string;
+  OPENROUTER_API_KEY?: string;
 
   @IsString()
-  ANTHROPIC_MODEL: string = 'claude-sonnet-5-5';
+  OPENROUTER_MODEL: string = 'anthropic/claude-sonnet-5.5';
+
+  @IsString()
+  OPENROUTER_BASE_URL: string = 'https://openrouter.ai/api/v1';
 
   @IsString()
   UPLOAD_DIR: string = './uploads';

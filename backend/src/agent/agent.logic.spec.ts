@@ -259,6 +259,16 @@ describe('guardrails', () => {
     expect(run(conflict, askConflict()).violations).toEqual([]);
   });
 
+  it('does not let digits inside ids (e.g. a uuid in the change summary) license numbers', () => {
+    const state = arjun({ cvGraduationYear: '2024' });
+    state.evaluation!.summary = { changes: { previousEvaluationId: 'a14b-0777-9c', newGapIds: ['X:99'], scoreDelta: 0 } };
+    const candidates = candidatesOf(state);
+    const ctx = buildLlmContext(state, candidates);
+    const v = validateDecision(askConflict({ message: 'Was it 14 or 777?' }), candidates, state, ctx);
+    expect(v.violations).toEqual(expect.arrayContaining(['UNSUPPORTED_NUMBER:14', 'UNSUPPORTED_NUMBER:777']));
+    expect(validateDecision(askConflict(), candidates, state, ctx).violations).toEqual([]);
+  });
+
   it('rejects promises and missing DEMO labelling', () => {
     expect(run(ready, recommend({ message: 'You are eligible and your visa is guaranteed. DEMO.' })).violations).toContain('OVERPROMISE');
     expect(run(ready, recommend({ message: 'Prepare your application.' })).violations).toContain('MISSING_DEMO_LABEL');

@@ -138,6 +138,7 @@ export class IngestionService {
       system: EXTRACTION_SYSTEM_PROMPT,
       content: [{ type: 'text', text: buildExtractionUserText(read.pages, doc.filename) }],
       schema: EXTRACTION_SCHEMA,
+      maxTokens: 2000, // fits a small OpenRouter allowance; the global default stays 3000
     });
     const proposed = parseProposedClaims(output);
 

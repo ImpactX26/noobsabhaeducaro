@@ -97,7 +97,11 @@ export class ScriptedLlm {
   override: Record<string, { documentType: string; claims: Proposal[] }> = {};
   /** Page transcriptions returned for vision requests, keyed by call order. */
   transcriptions: Array<Array<{ pageNo: number; text: string }>> = [];
-  calls: Array<{ kind: 'extract' | 'transcribe'; filename?: string }> = [];
+  calls: Array<{ kind: 'extract' | 'transcribe' | 'agent'; filename?: string }> = [];
+  /** Agent requests: the context the agent sent, and an optional custom reply (default: pick the first candidate). */
+  agentContexts: any[] = [];
+  agentHandler?: (context: any) => unknown;
+  agentError?: Error;
   /** When set, extraction waits for it (lets a test observe the "processing" state). */
   gate?: Promise<void>;
 
@@ -107,6 +111,13 @@ export class ScriptedLlm {
 
   async completeJson(req: JsonCompletionRequest): Promise<unknown> {
     if (!this.configured) throw new LlmUnavailableError();
+    if (/next-best-action/i.test(req.system)) {
+      const context = JSON.parse((req.content[0] as { text: string }).text);
+      this.calls.push({ kind: 'agent' });
+      this.agentContexts.push(context);
+      if (this.agentError) throw this.agentError;
+      return this.agentHandler ? this.agentHandler(context) : defaultAgentReply(context);
+    }
     if (/transcribe/i.test(req.system)) {
       this.calls.push({ kind: 'transcribe' });
       return { pages: this.transcriptions.shift() ?? [] };
@@ -127,4 +138,21 @@ export class ScriptedLlm {
       })),
     };
   }
+}
+
+/** What a well-behaved model does: take the first candidate and word it from the supplied description. */
+export function defaultAgentReply(context: any) {
+  const c = context.candidates[0];
+  if (!c) return { action: 'NO_ACTION', message: 'Nothing to do.', rationale: 'No candidates.', gapId: null, requirementId: null, docType: null, route: null, evidenceRefs: [] };
+  const demo = c.action === 'SHOW_MISSING_REQUIREMENT' || c.action === 'RECOMMEND_NEXT_STEP' ? ' (DEMO requirements)' : '';
+  return {
+    action: c.action,
+    message: `${c.description}${demo}`,
+    rationale: 'First-ranked candidate.',
+    gapId: c.gapId,
+    requirementId: c.requirementId,
+    docType: c.docType,
+    route: c.action === 'RECOMMEND_NEXT_STEP' ? 'STUDY' : null,
+    evidenceRefs: c.evidenceRefs.slice(0, 2),
+  };
 }

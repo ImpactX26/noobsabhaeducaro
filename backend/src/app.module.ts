@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AgentModule } from './agent/agent.module';
 import { ApplicantsModule } from './applicants/applicants.module';
 import { ClarificationsModule } from './clarifications/clarifications.module';
 import { validateEnv } from './config/env.validation';
@@ -21,6 +22,7 @@ import { WorkflowModule } from './workflow/workflow.module';
     WorkflowModule,
     ClarificationsModule,
     JourneyModule,
+    AgentModule,
   ],
 })
 export class AppModule {}

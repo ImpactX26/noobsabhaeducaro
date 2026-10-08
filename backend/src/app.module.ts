@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ApplicantsModule } from './applicants/applicants.module';
+import { ClarificationsModule } from './clarifications/clarifications.module';
 import { validateEnv } from './config/env.validation';
 import { DocumentsModule } from './documents/documents.module';
 import { HealthModule } from './health/health.module';
+import { IngestionModule } from './ingestion/ingestion.module';
+import { JourneyModule } from './journey/journey.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { WorkflowModule } from './workflow/workflow.module';
 
 @Module({
   imports: [
@@ -13,6 +17,10 @@ import { PrismaModule } from './prisma/prisma.module';
     HealthModule,
     ApplicantsModule,
     DocumentsModule,
+    IngestionModule,
+    WorkflowModule,
+    ClarificationsModule,
+    JourneyModule,
   ],
 })
 export class AppModule {}

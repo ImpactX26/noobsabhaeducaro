@@ -49,7 +49,7 @@ describe('Applicant + Document API (real PostgreSQL)', () => {
 
   it('creates and reads an applicant, and persists it in PostgreSQL', async () => {
     const created = await createArjun();
-    expect(created).toMatchObject({ name: 'Arjun Mehta', stage: 'INTAKE', goal: null });
+    expect(created).toMatchObject({ name: 'Arjun Mehta', stage: 'NEW', goal: null });
 
     const got = await request(app.getHttpServer()).get(`/applicants/${created.id}`).expect(200);
     expect(got.body).toMatchObject({ id: created.id, name: 'Arjun Mehta', documents: [] });

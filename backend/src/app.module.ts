@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AgentModule } from './agent/agent.module';
 import { ApplicantsModule } from './applicants/applicants.module';
+import { AuthModule } from './auth/auth.module';
 import { ClarificationsModule } from './clarifications/clarifications.module';
 import { validateEnv } from './config/env.validation';
 import { DocumentsModule } from './documents/documents.module';
@@ -15,6 +16,7 @@ import { WorkflowModule } from './workflow/workflow.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     PrismaModule,
+    AuthModule,
     HealthModule,
     ApplicantsModule,
     DocumentsModule,

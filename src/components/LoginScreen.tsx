@@ -25,7 +25,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   isInline = false,
   initialMode = 'login',
 }) => {
-  const { signIn, signUp, quickDemoLogin } = useAuth();
+  const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
 
   // Form fields
@@ -39,7 +39,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [forgotPasswordNotice, setForgotPasswordNotice] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setForgotPasswordNotice(false);
@@ -47,7 +47,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
     try {
       if (mode === 'login') {
-        const res = signIn(email, password);
+        const res = await signIn(email, password);
         if (res.success) {
           if (onAuthSuccess) onAuthSuccess();
           if (onClose) onClose();
@@ -60,7 +60,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           setIsSubmitting(false);
           return;
         }
-        const res = signUp(name, email, password);
+        const res = await signUp(name, email, password);
         if (res.success) {
           if (onAuthSuccess) onAuthSuccess();
           if (onClose) onClose();
@@ -73,13 +73,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleDemoLogin = () => {
-    setError(null);
-    quickDemoLogin();
-    if (onAuthSuccess) onAuthSuccess();
-    if (onClose) onClose();
   };
 
   const content = (
@@ -162,7 +155,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       {forgotPasswordNotice && (
         <div className="mb-5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-[#FFD21C] flex items-start gap-2.5">
           <CheckCircle2 className="w-4 h-4 text-[#FFD21C] shrink-0 mt-0.5" />
-          <span>Password reset link simulated: Please use the 1-Click Demo Login to access instantly.</span>
+          <span>Password reset is not available yet. If you forgot your password, create a new account with another email.</span>
         </div>
       )}
 
@@ -261,29 +254,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         </button>
       </form>
 
-      {/* Fast Demo Access for Evaluators */}
-      <div className="mt-6 pt-6 border-t theme-border space-y-3">
-        <div className="flex items-center justify-between text-xs font-mono theme-text-muted">
-          <span>Instant Evaluator Access:</span>
-          <span className="text-[#FFD21C] flex items-center gap-1 font-bold">
-            <Sparkles className="w-3 h-3 text-[#FFD21C]" />
-            1-Click Demo
-          </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleDemoLogin}
-          className="w-full py-2.5 px-3 rounded-xl theme-bg-surface hover:theme-bg-subtle border theme-border theme-text-main text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs hover:border-[#FFD21C]"
-        >
-          <span>Load Rahul Sharma (TUM Master's Candidate)</span>
-        </button>
-      </div>
-
       {/* Privacy Safeguard Note */}
       <div className="mt-5 flex items-center justify-center gap-2 text-[11px] font-mono theme-text-muted">
         <ShieldCheck className="w-3.5 h-3.5 text-[#FFD21C]" />
-        <span>GDPR / DSGVO Compliant · Isolated per applicant</span>
+        <span>Your data is private to your account</span>
       </div>
     </div>
   );

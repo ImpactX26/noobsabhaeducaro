@@ -7,6 +7,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import request from 'supertest';
+import { TestSession, registerTestUser } from '../testing/auth-client';
 import { LlmService } from '../llm/llm.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ScriptedLlm } from '../testing/scripted-llm';
@@ -29,14 +30,18 @@ describe('Applicant ID strategy: one consistent UUID across all routes', () => {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
     prisma = app.get(PrismaService);
+    session = await registerTestUser(app);
+    http = session.http;
   });
   afterAll(async () => {
     await prisma.applicant.deleteMany({ where: { id: { in: created } } });
+    await prisma.user.deleteMany({ where: { id: session.user.id } });
     await app.close();
     rmSync(uploadDir, { recursive: true, force: true });
   });
 
-  const http = () => request(app.getHttpServer());
+  let session: TestSession;
+  let http: TestSession['http'];
   async function newApplicant(body: Record<string, unknown> = { name: 'Arjun Mehta' }) {
     const res = await http().post('/applicants').send(body).expect(201);
     created.push(res.body.id);

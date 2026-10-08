@@ -8,6 +8,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import request from 'supertest';
+import { TestSession, registerTestUser } from '../testing/auth-client';
 import { ClarificationsService } from '../clarifications/clarifications.service';
 import { LlmService } from '../llm/llm.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -45,6 +46,8 @@ describe('Applicant journey workflow (real PostgreSQL, real Arjun PDFs, scripted
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
     prisma = app.get(PrismaService);
+    session = await registerTestUser(app);
+    http = session.http;
     evaluations = app.get(EvaluationService);
     clarifications = app.get(ClarificationsService);
   });
@@ -62,11 +65,13 @@ describe('Applicant journey workflow (real PostgreSQL, real Arjun PDFs, scripted
 
   afterAll(async () => {
     await prisma.applicant.deleteMany({ where: { id: { in: created } } });
+    await prisma.user.deleteMany({ where: { id: session.user.id } });
     await app.close();
     rmSync(uploadDir, { recursive: true, force: true });
   });
 
-  const http = () => request(app.getHttpServer());
+  let session: TestSession;
+  let http: TestSession['http'];
   const pdf = (name: string) => readFileSync(path.join(FIXTURES, name));
 
   async function newApplicant() {

@@ -1,20 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { User, UserApplicationData, AuthResponse } from './types';
-import { authService, DEMO_USER } from './authService';
+import { authService } from './authService';
+import { setUnauthorizedHandler } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  /** True while a stored session is being re-verified with the backend. */
   isLoading: boolean;
   authModalOpen: boolean;
   authModalMode: 'login' | 'signup';
   userData: UserApplicationData | null;
-  signIn: (email: string, pass: string) => AuthResponse;
-  signUp: (name: string, email: string, pass: string) => AuthResponse;
+  signIn: (email: string, pass: string) => Promise<AuthResponse>;
+  signUp: (name: string, email: string, pass: string) => Promise<AuthResponse>;
   signOut: () => void;
   openAuthModal: (mode?: 'login' | 'signup') => void;
   closeAuthModal: () => void;
-  quickDemoLogin: () => void;
   saveCurrentUserData: (data: UserApplicationData) => void;
 }
 
@@ -27,15 +28,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [userData, setUserData] = useState<UserApplicationData | null>(null);
 
-  // Initialize session on mount
-  useEffect(() => {
-    const existing = authService.getCurrentUser();
-    if (existing) {
-      setUser(existing);
-      setUserData(authService.getUserData(existing));
-    }
-    setIsLoading(false);
+  const start = useCallback((account: User) => {
+    setUser(account);
+    setUserData(authService.getUserData(account));
   }, []);
+
+  const signOut = useCallback(() => {
+    authService.signOut();
+    setUser(null);
+    setUserData(null);
+  }, []);
+
+  // Re-open the session on page load, but only if the backend still accepts the stored token
+  useEffect(() => {
+    let cancelled = false;
+    void authService.restoreSession().then((account) => {
+      if (cancelled) return;
+      if (account) start(account);
+      setIsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [start]);
+
+  // The backend rejected our token (expired / revoked): end the session here too
+  useEffect(() => {
+    setUnauthorizedHandler(signOut);
+    return () => setUnauthorizedHandler(null);
+  }, [signOut]);
 
   const openAuthModal = (mode: 'login' | 'signup' = 'login') => {
     setAuthModalMode(mode);
@@ -46,36 +67,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthModalOpen(false);
   };
 
-  const signIn = (email: string, pass: string): AuthResponse => {
-    const res = authService.signIn(email, pass);
+  const signIn = async (email: string, pass: string): Promise<AuthResponse> => {
+    const res = await authService.signIn(email, pass);
     if (res.success && res.user) {
-      setUser(res.user);
-      const data = authService.getUserData(res.user);
-      setUserData(data);
+      start(res.user);
       setAuthModalOpen(false);
     }
     return res;
   };
 
-  const signUp = (name: string, email: string, pass: string): AuthResponse => {
-    const res = authService.signUp(name, email, pass);
+  const signUp = async (name: string, email: string, pass: string): Promise<AuthResponse> => {
+    const res = await authService.signUp(name, email, pass);
     if (res.success && res.user) {
-      setUser(res.user);
-      const data = authService.getUserData(res.user);
-      setUserData(data);
+      start(res.user);
       setAuthModalOpen(false);
     }
     return res;
-  };
-
-  const signOut = () => {
-    authService.signOut();
-    setUser(null);
-    setUserData(null);
-  };
-
-  const quickDemoLogin = () => {
-    signIn(DEMO_USER.email, 'germany2025');
   };
 
   const saveCurrentUserData = (data: UserApplicationData) => {
@@ -99,7 +106,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         openAuthModal,
         closeAuthModal,
-        quickDemoLogin,
         saveCurrentUserData,
       }}
     >

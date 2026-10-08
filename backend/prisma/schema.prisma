@@ -92,8 +92,22 @@ enum ActionStatus {
   DONE
 }
 
+// A registered account. Passwords are stored only as bcrypt hashes. Every Applicant belongs to
+// exactly one User, and every applicant-scoped API route checks that ownership on the server.
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique // stored lower-cased
+  name         String
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  applicants   Applicant[]
+}
+
 model Applicant {
   id             String          @id @default(uuid())
+  // Owner. Null only for rows created before accounts existed: nobody can access those.
+  userId         String?
+  user           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   name           String
   email          String?
   goal           String?
@@ -106,6 +120,8 @@ model Applicant {
   evaluations    Evaluation[]
   actions        AgentAction[]
   clarifications Clarification[]
+
+  @@index([userId])
 }
 
 model Document {

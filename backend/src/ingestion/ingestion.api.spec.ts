@@ -9,6 +9,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import request from 'supertest';
+import { TestSession, registerTestUser } from '../testing/auth-client';
 import { EvidenceState } from '../evidence/evidence.types';
 import { LlmService } from '../llm/llm.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -47,6 +48,8 @@ describe('Document ingestion (real PostgreSQL, real Arjun PDFs, scripted Claude)
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
     prisma = app.get(PrismaService);
+    session = await registerTestUser(app);
+    http = session.http;
   });
 
   beforeEach(() => {
@@ -59,11 +62,13 @@ describe('Document ingestion (real PostgreSQL, real Arjun PDFs, scripted Claude)
 
   afterAll(async () => {
     await prisma.applicant.deleteMany({ where: { id: { in: created } } });
+    await prisma.user.deleteMany({ where: { id: session.user.id } });
     await app.close();
     rmSync(uploadDir, { recursive: true, force: true });
   });
 
-  const http = () => request(app.getHttpServer());
+  let session: TestSession;
+  let http: TestSession['http'];
 
   async function newApplicant() {
     const res = await http().post('/applicants').send({ name: 'Arjun Mehta' }).expect(201);

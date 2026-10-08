@@ -10,6 +10,18 @@ export const API_BASE_URL: string = (
   (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://localhost:3001'
 ).replace(/\/+$/, '');
 
+// The login token lives only in memory here; src/auth/authService.ts persists it and sets it.
+let authToken: string | null = null;
+let onUnauthorized: (() => void) | null = null;
+
+export const setAuthToken = (token: string | null) => {
+  authToken = token;
+};
+/** Called when the backend rejects the current token (expired, revoked): the app then signs the user out. */
+export const setUnauthorizedHandler = (handler: (() => void) | null) => {
+  onUnauthorized = handler;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -29,6 +41,18 @@ export type BackendDocStatus = 'UPLOADED' | 'PROCESSING' | 'DONE' | 'FAILED';
 export type EvidenceState = 'DOCUMENT_SUPPORTED' | 'APPLICANT_PROVIDED' | 'MISSING' | 'CONFLICT' | 'AI_GENERATED';
 export type RequirementStatus = 'MET' | 'NOT_MET' | 'UNVERIFIED' | 'MISSING' | 'CONFLICT' | 'NEEDS_REVIEW';
 export type AgentActionType = 'ASK_CLARIFICATION' | 'REQUEST_DOCUMENT' | 'SHOW_MISSING_REQUIREMENT' | 'RECOMMEND_NEXT_STEP' | 'NO_ACTION';
+
+export interface AuthAccount {
+  id: string;
+  name: string;
+  email: string;
+  /** The applicant this account owns (null until it has started an application). */
+  applicantId: string | null;
+}
+export interface AuthSession {
+  token: string;
+  user: AuthAccount;
+}
 
 export interface Applicant {
   id: string;
@@ -195,7 +219,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {
     res = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
-      headers: { Accept: 'application/json', ...(init.body && !(init.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), ...init.headers },
+      headers: {
+        Accept: 'application/json',
+        ...(init.body && !(init.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        ...init.headers,
+      },
     });
   } catch {
     throw new ApiError(`Cannot reach the SIEG.AI backend at ${API_BASE_URL}. Is it running?`, 0);
@@ -208,6 +237,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     /* non-JSON body */
   }
   if (!res.ok) {
+    // a rejected token on a protected call means the session is over (a wrong password on /auth/login is not)
+    if (res.status === 401 && authToken && !path.startsWith('/auth/')) onUnauthorized?.();
     const raw = (body as { message?: string | string[] } | null)?.message;
     const message = Array.isArray(raw) ? raw.join('; ') : raw || res.statusText || `Request failed (${res.status})`;
     throw new ApiError(message, res.status);
@@ -221,6 +252,10 @@ const json = (body: unknown): RequestInit => ({ method: 'POST', body: JSON.strin
 
 export const api = {
   health: () => request<{ status: string; db: string }>('/health'),
+
+  register: (input: { name: string; email: string; password: string }) => request<AuthSession>('/auth/register', json(input)),
+  login: (input: { email: string; password: string }) => request<AuthSession>('/auth/login', json(input)),
+  me: () => request<AuthAccount>('/auth/me'),
 
   createApplicant: (input: { name: string; email?: string; goal?: string; programLabel?: string }) =>
     request<Applicant>('/applicants', json(input)),

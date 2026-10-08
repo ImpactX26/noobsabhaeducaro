@@ -1,24 +1,21 @@
 /**
- * Authentication Architecture & User Session Types for SIEG.AI
+ * Authentication types for SIEG.AI. Accounts and passwords live in the backend (PostgreSQL);
+ * the browser only holds the signed token it was given after a successful sign-in.
  */
 
-import { ApplicantDetails, DocumentItem, ProfileSection, QualificationRequirement, DashboardStats } from '../types';
+import { ApplicantDetails } from '../types';
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  avatarUrl?: string;
-  createdAt: string;
+  /** The applicant this account owns on the backend, if it has started an application. */
+  applicantId?: string | null;
 }
 
+/** Form defaults remembered in this browser (not credentials, not the applicant's backend data). */
 export interface UserApplicationData {
   details: ApplicantDetails;
-  documents: DocumentItem[];
-  profileSections: ProfileSection[];
-  requirements: QualificationRequirement[];
-  dashboardStats: DashboardStats;
-  isCertificateUploaded: boolean;
 }
 
 export interface AuthResponse {

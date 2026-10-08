@@ -7,6 +7,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import request from 'supertest';
+import { TestSession, registerTestUser } from '../testing/auth-client';
 import { LlmService } from '../llm/llm.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { makeTextPdf } from '../testing/pdf-fixtures';
@@ -44,6 +45,8 @@ describe('Conflict clarification -> resolution claim -> re-evaluation (real Post
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
     prisma = app.get(PrismaService);
+    session = await registerTestUser(app);
+    http = session.http;
     evaluations = app.get(EvaluationService);
     clarifications = app.get(ClarificationsService);
   });
@@ -56,11 +59,13 @@ describe('Conflict clarification -> resolution claim -> re-evaluation (real Post
   afterEach(() => jest.restoreAllMocks());
   afterAll(async () => {
     await prisma.applicant.deleteMany({ where: { id: { in: created } } });
+    await prisma.user.deleteMany({ where: { id: session.user.id } });
     await app.close();
     rmSync(uploadDir, { recursive: true, force: true });
   });
 
-  const http = () => request(app.getHttpServer());
+  let session: TestSession;
+  let http: TestSession['http'];
 
   async function newApplicant() {
     const res = await http().post('/applicants').send({ name: 'Arjun Mehta' }).expect(201);

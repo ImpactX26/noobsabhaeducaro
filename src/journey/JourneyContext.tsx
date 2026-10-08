@@ -103,8 +103,8 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setError(messageOf(err));
         }
       } catch (err) {
-        if (err instanceof ApiError && err.status === 404) {
-          adopt(null); // the stored applicant no longer exists on the backend
+        if (err instanceof ApiError && (err.status === 404 || err.status === 403)) {
+          adopt(null); // the stored applicant is gone, or belongs to another account: the backend decides, not this id
           setJourney(null);
           setAgent(null);
         } else {
@@ -127,11 +127,12 @@ export const JourneyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       idRef.current = null;
       return;
     }
-    const stored = readStored(userId);
+    // a locally remembered id is only a hint: the backend re-checks ownership on every request
+    const stored = readStored(userId) ?? user?.applicantId ?? null;
     setApplicantId(stored);
     idRef.current = stored;
     if (stored) void load(stored);
-  }, [userId, load]);
+  }, [userId, user?.applicantId, load]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const run = useCallback(async <T,>(state: Busy, fn: () => Promise<T>): Promise<T> => {
     setBusy(state);

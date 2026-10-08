@@ -6,7 +6,7 @@ import { Test } from '@nestjs/testing';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
-import request from 'supertest';
+import { TestSession, registerTestUser } from '../testing/auth-client';
 import { PrismaService } from '../prisma/prisma.service';
 
 // Minimal PDF standing in for a fictional Arjun Mehta demo document.
@@ -19,6 +19,8 @@ describe('Applicant + Document API (real PostgreSQL)', () => {
   let prisma: PrismaService;
   let uploadDir: string;
   const createdIds: string[] = [];
+  let session: TestSession;
+  let http: TestSession['http'];
 
   beforeAll(async () => {
     uploadDir = mkdtempSync(path.join(tmpdir(), 'api-uploads-'));
@@ -30,16 +32,19 @@ describe('Applicant + Document API (real PostgreSQL)', () => {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
     prisma = app.get(PrismaService);
+    session = await registerTestUser(app);
+    http = session.http;
   });
 
   afterAll(async () => {
     await prisma.applicant.deleteMany({ where: { id: { in: createdIds } } }); // cascades to documents
+    await prisma.user.deleteMany({ where: { id: session.user.id } });
     await app.close();
     rmSync(uploadDir, { recursive: true, force: true });
   });
 
   async function createArjun() {
-    const res = await request(app.getHttpServer())
+    const res = await http()
       .post('/applicants')
       .send({ name: 'Arjun Mehta', email: 'arjun.mehta@example.com' })
       .expect(201);
@@ -51,27 +56,27 @@ describe('Applicant + Document API (real PostgreSQL)', () => {
     const created = await createArjun();
     expect(created).toMatchObject({ name: 'Arjun Mehta', stage: 'NEW', goal: null });
 
-    const got = await request(app.getHttpServer()).get(`/applicants/${created.id}`).expect(200);
+    const got = await http().get(`/applicants/${created.id}`).expect(200);
     expect(got.body).toMatchObject({ id: created.id, name: 'Arjun Mehta', documents: [] });
     expect(await prisma.applicant.count({ where: { id: created.id } })).toBe(1);
   });
 
   it('validates applicant input and ids', async () => {
-    await request(app.getHttpServer()).post('/applicants').send({}).expect(400);
-    await request(app.getHttpServer()).post('/applicants').send({ name: 'X', email: 'nope' }).expect(400);
-    await request(app.getHttpServer()).get('/applicants/not-a-uuid').expect(400);
-    await request(app.getHttpServer()).get('/applicants/00000000-0000-4000-8000-000000000000').expect(404);
+    await http().post('/applicants').send({}).expect(400);
+    await http().post('/applicants').send({ name: 'X', email: 'nope' }).expect(400);
+    await http().get('/applicants/not-a-uuid').expect(400);
+    await http().get('/applicants/00000000-0000-4000-8000-000000000000').expect(404);
   });
 
   it('updates the goal', async () => {
     const { id } = await createArjun();
-    const res = await request(app.getHttpServer())
+    const res = await http()
       .put(`/applicants/${id}/goal`)
       .send({ goal: "Master's in Computer Science in Germany", programLabel: 'DEMO MSc CS' })
       .expect(200);
     expect(res.body).toMatchObject({ goal: "Master's in Computer Science in Germany", programLabel: 'DEMO MSc CS' });
-    await request(app.getHttpServer()).put(`/applicants/${id}/goal`).send({ goal: '' }).expect(400);
-    await request(app.getHttpServer())
+    await http().put(`/applicants/${id}/goal`).send({ goal: '' }).expect(400);
+    await http()
       .put('/applicants/00000000-0000-4000-8000-000000000000/goal')
       .send({ goal: 'x' })
       .expect(404);
@@ -80,7 +85,7 @@ describe('Applicant + Document API (real PostgreSQL)', () => {
   it('uploads a document: file on disk + Document row + listed with status', async () => {
     const { id } = await createArjun();
 
-    const up = await request(app.getHttpServer())
+    const up = await http()
       .post(`/applicants/${id}/documents`)
       .field('docType', 'DEGREE')
       .attach('file', ARJUN_PDF, { filename: 'degree_certificate.pdf', contentType: 'application/pdf' })
@@ -104,12 +109,12 @@ describe('Applicant + Document API (real PostgreSQL)', () => {
     const row = await prisma.document.findUnique({ where: { id: up.body.id } });
     expect(row).toMatchObject({ applicantId: id, storagePath: up.body.storagePath, status: 'UPLOADED' });
 
-    const list = await request(app.getHttpServer()).get(`/applicants/${id}/documents`).expect(200);
+    const list = await http().get(`/applicants/${id}/documents`).expect(200);
     expect(list.body).toHaveLength(1);
     expect(list.body[0]).toMatchObject({ id: up.body.id, status: 'UPLOADED', docType: 'DEGREE' });
     expect(list.body[0]).not.toHaveProperty('pages');
 
-    const applicant = await request(app.getHttpServer()).get(`/applicants/${id}`).expect(200);
+    const applicant = await http().get(`/applicants/${id}`).expect(200);
     expect(applicant.body.documents).toEqual([
       { id: up.body.id, filename: 'degree_certificate.pdf', docType: 'DEGREE', status: 'UPLOADED' },
     ]);
@@ -117,7 +122,7 @@ describe('Applicant + Document API (real PostgreSQL)', () => {
 
   it('defaults docType to UNKNOWN and sanitises hostile filenames', async () => {
     const { id } = await createArjun();
-    const up = await request(app.getHttpServer())
+    const up = await http()
       .post(`/applicants/${id}/documents`)
       .attach('file', ARJUN_PDF, { filename: '../../evil.pdf', contentType: 'application/pdf' })
       .expect(201);
@@ -128,23 +133,23 @@ describe('Applicant + Document API (real PostgreSQL)', () => {
 
   it('rejects bad uploads without creating rows or files', async () => {
     const { id } = await createArjun();
-    const http = request(app.getHttpServer());
+    const h = http();
 
-    await http.post(`/applicants/${id}/documents`).expect(400); // no file
-    await http
+    await h.post(`/applicants/${id}/documents`).expect(400); // no file
+    await h
       .post(`/applicants/${id}/documents`)
       .attach('file', Buffer.from('<html></html>'), { filename: 'x.html', contentType: 'text/html' })
       .expect(400);
-    await http
+    await h
       .post(`/applicants/${id}/documents`)
       .attach('file', Buffer.from('not a pdf'), { filename: 'fake.pdf', contentType: 'application/pdf' })
       .expect(400);
-    await http
+    await h
       .post(`/applicants/${id}/documents`)
       .field('docType', 'PASSPORT')
       .attach('file', ARJUN_PDF, { filename: 'a.pdf', contentType: 'application/pdf' })
       .expect(400);
-    await http
+    await h
       .post('/applicants/00000000-0000-4000-8000-000000000000/documents')
       .attach('file', ARJUN_PDF, { filename: 'a.pdf', contentType: 'application/pdf' })
       .expect(404);

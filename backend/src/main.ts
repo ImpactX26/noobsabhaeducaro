@@ -15,6 +15,7 @@ async function bootstrap() {
       'Evidence-based applicant readiness. Requirements are DEMO configuration, not official criteria.',
     )
     .setVersion('0.1.0')
+    .addBearerAuth()
     .build();
   SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swaggerConfig));
 

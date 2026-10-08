@@ -6,9 +6,10 @@ import { CreateApplicantDto, UpdateGoalDto } from './dto/applicant.dto';
 export class ApplicantsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateApplicantDto) {
+  /** The owner is always the signed-in account, never anything the client sends. */
+  create(userId: string, dto: CreateApplicantDto) {
     return this.prisma.applicant.create({
-      data: { name: dto.name.trim(), email: dto.email, goal: dto.goal, programLabel: dto.programLabel },
+      data: { userId, name: dto.name.trim(), email: dto.email, goal: dto.goal, programLabel: dto.programLabel },
     });
   }
 

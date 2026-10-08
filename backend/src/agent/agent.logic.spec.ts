@@ -269,6 +269,19 @@ describe('guardrails', () => {
     expect(validateDecision(askConflict(), candidates, state, ctx).violations).toEqual([]);
   });
 
+  it('sends only goal and program to the model, so applicant ids/timestamps cannot license numbers', () => {
+    const state = arjun({ cvGraduationYear: '2024' });
+    // the real journey object carries more than the AgentState type declares
+    (state as any).applicant = { ...state.applicant, id: '985fac29-3cbe-4b13-8539-c3afce73d48f', name: 'Arjun Mehta', email: 'a@b.c', createdAt: '2026-10-08T14:07:08.534Z', updatedAt: '2026-10-08T14:07:09.086Z' };
+    const candidates = candidatesOf(state);
+    const ctx = buildLlmContext(state, candidates);
+    expect(ctx.applicant).toEqual({ goal: "Master's in Computer Science in Germany", programLabel: null });
+    expect(JSON.stringify(ctx)).not.toMatch(/985fac29|14:07|a@b\.c/);
+    // "14" (the hour in the timestamp) and "985" (from the id) must not be accepted as facts
+    const v = validateDecision(askConflict({ message: 'Please answer within 14 days, ref 985.' }), candidates, state, ctx);
+    expect(v.violations).toEqual(expect.arrayContaining(['UNSUPPORTED_NUMBER:14', 'UNSUPPORTED_NUMBER:985']));
+  });
+
   it('rejects promises and missing DEMO labelling', () => {
     expect(run(ready, recommend({ message: 'You are eligible and your visa is guaranteed. DEMO.' })).violations).toContain('OVERPROMISE');
     expect(run(ready, recommend({ message: 'Prepare your application.' })).violations).toContain('MISSING_DEMO_LABEL');

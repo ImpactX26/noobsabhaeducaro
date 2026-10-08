@@ -220,7 +220,8 @@ Rules:
 export function buildLlmContext(state: AgentState, candidates: Candidate[]) {
   const ev = state.evaluation!;
   return {
-    applicant: state.applicant,
+    // only what the decision needs: no name, email, ids or timestamps (their digits would also count as "supported" numbers)
+    applicant: { goal: state.applicant.goal, programLabel: state.applicant.programLabel },
     stage: state.stage,
     routes: { labels: ROUTES, qualifiedRoute: QUALIFIED_ROUTE, note: 'Only STUDY has (DEMO) requirement data.' },
     readiness: { score: ev.score, verdict: ev.verdict, isDemo: ev.isDemo },
@@ -332,7 +333,7 @@ export function validateDecision(raw: unknown, candidates: Candidate[], state: A
 
   // wording: no unsupported numbers/dates, no promises, DEMO labelling
   // Ids (uuids contain digit runs) are not facts: they must not license numbers in the message.
-  const supported = new Set(JSON.stringify(context, (k, v) => (k === 'evidenceRefs' || /Ids?$/.test(k) ? undefined : v)).match(NUMBER) ?? []);
+  const supported = new Set(JSON.stringify(context, (k, v) => (k === 'evidenceRefs' || k === 'id' || /Ids?$/.test(k) ? undefined : v)).match(NUMBER) ?? []);
   for (const n of `${message} ${rationale}`.match(NUMBER) ?? []) if (!supported.has(n)) fail(`UNSUPPORTED_NUMBER:${n}`);
   if (OVERPROMISE.test(`${message} ${rationale}`)) fail('OVERPROMISE');
   if ((action === 'RECOMMEND_NEXT_STEP' || action === 'SHOW_MISSING_REQUIREMENT') && !/demo/i.test(message)) fail('MISSING_DEMO_LABEL');

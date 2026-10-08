@@ -178,6 +178,7 @@ live('LlmService (live OpenRouter -> Claude)', () => {
       system: EXTRACTION_SYSTEM_PROMPT,
       content: [{ type: 'text', text: buildExtractionUserText([{ pageNo: 1, text: 'ENGLISH LANGUAGE TEST REPORT\nCandidate Arjun Mehta\nOverall Band 7.0' }], 'x.pdf') }],
       schema: EXTRACTION_SCHEMA as unknown as Record<string, unknown>,
+      maxTokens: 2000, // smoke test only: keeps the request affordable on a small OpenRouter allowance
     })) as { documentType: string; claims: Array<{ fieldKey: string; rawValue: string; quote: string }> };
     console.log(`live OpenRouter model: ${llm.model}; claims: ${JSON.stringify(out.claims.map((c) => [c.fieldKey, c.rawValue]))}`);
     expect(out.documentType).toBe('LANGUAGE_CERT');

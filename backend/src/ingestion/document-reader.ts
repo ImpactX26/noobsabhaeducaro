@@ -84,7 +84,7 @@ export class DocumentReader {
 
   private async transcribe(block: LlmContentBlock, label: string): Promise<PageText[]> {
     if (!this.llm.isConfigured) {
-      throw new IngestionError('This document has no selectable text and needs Claude vision, but OPENROUTER_API_KEY is not configured');
+      throw new IngestionError('This document has no selectable text and needs a vision model, but GEMINI_API_KEY is not configured');
     }
     const out = (await this.llm.completeJson({
       system: TRANSCRIPTION_SYSTEM_PROMPT,

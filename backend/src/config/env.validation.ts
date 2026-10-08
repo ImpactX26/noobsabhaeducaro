@@ -10,16 +10,13 @@ export class EnvironmentVariables {
   @IsString()
   DATABASE_URL!: string;
 
-  // Claude through OpenRouter (https://openrouter.ai). Without a key, LLM-backed steps fail gracefully.
+  // Google Gemini (document extraction + the agent). Without a key, LLM-backed steps fail gracefully.
   @IsOptional()
   @IsString()
-  OPENROUTER_API_KEY?: string;
+  GEMINI_API_KEY?: string;
 
   @IsString()
-  OPENROUTER_MODEL: string = 'anthropic/claude-sonnet-5.5';
-
-  @IsString()
-  OPENROUTER_BASE_URL: string = 'https://openrouter.ai/api/v1';
+  GEMINI_MODEL: string = 'gemini-3.5-flash-lite';
 
   @IsString()
   UPLOAD_DIR: string = './uploads';

@@ -1,10 +1,11 @@
+import { ApiError, GoogleGenAI, type GenerateContentResponse, type Part } from '@google/genai';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-/** Raised when no OPENROUTER_API_KEY is configured. Callers fail gracefully and can be retried. */
+/** Raised when no GEMINI_API_KEY is configured. Callers fail gracefully and can be retried. */
 export class LlmUnavailableError extends Error {
   constructor() {
-    super('OPENROUTER_API_KEY is not configured; LLM-backed processing is unavailable');
+    super('GEMINI_API_KEY is not configured; LLM-backed processing is unavailable');
     this.name = 'LlmUnavailableError';
   }
 }
@@ -30,79 +31,65 @@ export interface JsonCompletionRequest {
   /** JSON Schema the response is constrained to (structured outputs). */
   schema: Record<string, unknown>;
   maxTokens?: number;
-  /** Accepted for interface stability; OpenRouter chooses the model's own default reasoning. */
+  /** Accepted for interface stability; the model's own default reasoning is used. */
   effort?: 'low' | 'medium' | 'high';
 }
 
-export const DEFAULT_OPENROUTER_MODEL = 'anthropic/claude-sonnet-5.5';
-export const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+const DEFAULT_MAX_OUTPUT_TOKENS = 3000;
 const REQUEST_TIMEOUT_MS = 120_000;
 
-type OpenRouterPart =
-  | { type: 'text'; text: string }
-  | { type: 'image_url'; image_url: { url: string } }
-  | { type: 'file'; file: { filename: string; file_data: string } };
+/** Finish reasons where the model refused or the content was blocked. */
+const BLOCKED = new Set(['SAFETY', 'RECITATION', 'BLOCKLIST', 'PROHIBITED_CONTENT', 'SPII', 'IMAGE_SAFETY', 'LANGUAGE']);
 
-function toPart(block: LlmContentBlock): OpenRouterPart {
-  if (block.type === 'text') return { type: 'text', text: block.text };
-  const url = `data:${block.source.media_type};base64,${block.source.data}`;
-  return block.type === 'image'
-    ? { type: 'image_url', image_url: { url } }
-    : { type: 'file', file: { filename: 'document.pdf', file_data: url } };
+function toPart(block: LlmContentBlock): Part {
+  if (block.type === 'text') return { text: block.text };
+  // images and PDFs are sent inline as base64
+  return { inlineData: { mimeType: block.source.media_type, data: block.source.data } };
 }
 
 /**
- * Schema-constrained JSON completion through OpenRouter's chat-completions API (Claude by
- * default). Everything LLM-related goes through `completeJson`, so document extraction and the
- * agent do not know which provider carries the request, and tests replace this one provider.
- * The model is never given a score or a decision to make here - only text to read and a schema to fill.
+ * Schema-constrained JSON completion through the official Google Gemini API (@google/genai).
+ * Everything LLM-related goes through `completeJson`, so document extraction and the agent do
+ * not know which provider carries the request, and tests replace this one provider. The model is
+ * never given a score or a decision to make here - only text to read and a schema to fill.
  */
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
+  private client?: GoogleGenAI;
   /** Delay before the single retry of a transient failure (429 / 5xx / network); tests set it to 0. */
   protected retryDelayMs = 1000;
 
   constructor(private readonly config: ConfigService) {}
 
   get isConfigured(): boolean {
-    return Boolean(this.config.get<string>('OPENROUTER_API_KEY'));
+    return Boolean(this.config.get<string>('GEMINI_API_KEY'));
   }
 
   get model(): string {
-    return this.config.get<string>('OPENROUTER_MODEL') || DEFAULT_OPENROUTER_MODEL;
+    return this.config.get<string>('GEMINI_MODEL') || DEFAULT_GEMINI_MODEL;
   }
 
-  get endpoint(): string {
-    const base = this.config.get<string>('OPENROUTER_BASE_URL') || DEFAULT_OPENROUTER_BASE_URL;
-    return `${base.replace(/\/+$/, '')}/chat/completions`;
+  private getClient(): GoogleGenAI {
+    const apiKey = this.config.get<string>('GEMINI_API_KEY');
+    if (!apiKey) throw new LlmUnavailableError();
+    this.client ??= new GoogleGenAI({ apiKey });
+    return this.client;
   }
 
   async completeJson(req: JsonCompletionRequest): Promise<unknown> {
-    const apiKey = this.config.get<string>('OPENROUTER_API_KEY');
-    if (!apiKey) throw new LlmUnavailableError();
+    const client = this.getClient();
 
-    const body = JSON.stringify({
-      model: this.model,
-      max_tokens: req.maxTokens ?? 3000,
-      messages: [
-        { role: 'system', content: req.system },
-        { role: 'user', content: req.content.map(toPart) },
-      ],
-      response_format: { type: 'json_schema', json_schema: { name: 'response', strict: true, schema: req.schema } },
-      // only route to providers that honour the structured-output parameter
-      provider: { require_parameters: true },
-    });
+    const response = await this.generate(client, req);
 
-    const data = await this.post(apiKey, body);
-    const choice = data.choices?.[0];
-    if (data.error || !choice) throw new LlmOutputError(`LLM request failed: ${data.error?.message ?? 'empty response'}`);
-    if (choice.finish_reason === 'content_filter') throw new LlmOutputError('The model declined to process this content');
-    if (choice.finish_reason === 'length') throw new LlmOutputError('The model output was truncated');
-    if (choice.finish_reason === 'error') throw new LlmOutputError(`LLM request failed: ${choice.error?.message ?? 'provider error'}`);
+    const blockReason = response.promptFeedback?.blockReason;
+    if (blockReason) throw new LlmOutputError('The model declined to process this content');
+    const finish = response.candidates?.[0]?.finishReason as string | undefined;
+    if (finish && BLOCKED.has(finish)) throw new LlmOutputError('The model declined to process this content');
+    if (finish === 'MAX_TOKENS') throw new LlmOutputError('The model output was truncated');
 
-    const content = choice.message?.content;
-    const text = (typeof content === 'string' ? content : '').trim().replace(/^```(?:json)?\s*([\s\S]*?)\s*```$/i, '$1');
+    const text = (response.text ?? '').trim().replace(/^```(?:json)?\s*([\s\S]*?)\s*```$/i, '$1');
     try {
       return JSON.parse(text);
     } catch {
@@ -111,35 +98,45 @@ export class LlmService {
     }
   }
 
-  /** POST with a timeout and one retry for transient failures. Never leaks the API key into errors. */
-  private async post(apiKey: string, body: string, attempt = 1): Promise<OpenRouterResponse> {
-    let res: Response;
+  /** One generateContent call with a timeout and one retry for transient failures. Never leaks the API key. */
+  private async generate(client: GoogleGenAI, req: JsonCompletionRequest, attempt = 1): Promise<GenerateContentResponse> {
     try {
-      res = await fetch(this.endpoint, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'X-Title': 'AI Applicant Copilot' },
-        body,
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      return await client.models.generateContent({
+        model: this.model,
+        contents: [{ role: 'user', parts: req.content.map(toPart) }],
+        config: {
+          systemInstruction: req.system,
+          responseMimeType: 'application/json',
+          responseJsonSchema: req.schema,
+          maxOutputTokens: req.maxTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+          httpOptions: { timeout: REQUEST_TIMEOUT_MS },
+        },
       });
     } catch (err) {
-      if (attempt === 1) return this.retry(apiKey, body);
-      throw new LlmOutputError(`LLM request failed: ${err instanceof Error ? err.name : 'network error'}`);
+      const status = err instanceof ApiError ? err.status : 0;
+      const transient = status === 0 || status === 429 || status >= 500;
+      if (attempt === 1 && transient) {
+        await new Promise((r) => setTimeout(r, this.retryDelayMs));
+        return this.generate(client, req, 2);
+      }
+      throw new LlmOutputError(
+        status
+          ? `LLM request failed (HTTP ${status}): ${this.describe(err)}`
+          : `LLM request failed: ${err instanceof Error ? err.name : 'network error'}`,
+      );
     }
-    if (!res.ok) {
-      if (attempt === 1 && (res.status === 429 || res.status >= 500)) return this.retry(apiKey, body);
-      const detail = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-      throw new LlmOutputError(`LLM request failed (HTTP ${res.status}): ${detail?.error?.message ?? res.statusText}`);
-    }
-    return (await res.json().catch(() => ({}))) as OpenRouterResponse;
   }
 
-  private async retry(apiKey: string, body: string) {
-    await new Promise((r) => setTimeout(r, this.retryDelayMs));
-    return this.post(apiKey, body, 2);
+  /** The provider's message, without anything that could contain the key. */
+  private describe(err: unknown): string {
+    const raw = err instanceof Error ? err.message : String(err);
+    // the SDK often embeds the JSON error body in the message; surface its "message" field
+    try {
+      const parsed = JSON.parse(raw) as { error?: { message?: string } };
+      if (parsed.error?.message) return parsed.error.message;
+    } catch {
+      /* not JSON */
+    }
+    return raw.length > 300 ? `${raw.slice(0, 300)}...` : raw;
   }
-}
-
-interface OpenRouterResponse {
-  choices?: Array<{ finish_reason?: string; error?: { message?: string }; message?: { content?: unknown } }>;
-  error?: { message?: string };
 }

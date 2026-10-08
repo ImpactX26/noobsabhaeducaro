@@ -285,7 +285,7 @@ describe('Document ingestion (real PostgreSQL, real Arjun PDFs, scripted Claude)
       const doc = await upload(applicantId, 'scan.pdf', makeBlankPdf(1), 'LANGUAGE_CERT');
       const res = await http().post(`/applicants/${applicantId}/documents/${doc.id}/process`).expect(200);
       expect(res.body.document).toMatchObject({ status: 'FAILED' });
-      expect(res.body.document.error).toMatch(/OPENROUTER_API_KEY/);
+      expect(res.body.document.error).toMatch(/GEMINI_API_KEY/);
       expect(await prisma.claim.count({ where: { applicantId } })).toBe(0);
     });
   });

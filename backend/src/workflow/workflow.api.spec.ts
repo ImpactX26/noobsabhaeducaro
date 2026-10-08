@@ -400,7 +400,7 @@ describe('Applicant journey workflow (real PostgreSQL, real Arjun PDFs, scripted
       llm.configured = false;
       const failed = await processDoc(applicantId, ids[CV]);
       expect(failed.body.document).toMatchObject({ status: 'FAILED' });
-      expect(failed.body.document.error).toMatch(/OPENROUTER_API_KEY/);
+      expect(failed.body.document.error).toMatch(/GEMINI_API_KEY/);
       expect(failed.body.run).toMatchObject({ version: 1, status: 'FAILED' });
       expect(failed.body.evaluation).toBeNull();
       expect(failed.body.stage).toBe('NEW');

@@ -62,7 +62,7 @@ describe('DocumentReader: text PDF first, vision only when needed', () => {
 
   it('fails clearly when a scan needs vision but no API key is configured', async () => {
     const { llm, completeJson } = fakeLlm(null, false);
-    await expect(new DocumentReader(llm).read(pdf(makeBlankPdf(1)))).rejects.toThrow(/OPENROUTER_API_KEY/);
+    await expect(new DocumentReader(llm).read(pdf(makeBlankPdf(1)))).rejects.toThrow(/GEMINI_API_KEY/);
     expect(completeJson).not.toHaveBeenCalled();
   });
 

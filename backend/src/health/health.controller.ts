@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/auth.decorators';
 import { PrismaService } from '../prisma/prisma.service';
@@ -18,6 +18,9 @@ export class HealthController {
     } catch {
       db = 'down';
     }
-    return { status: db === 'up' ? 'ok' : 'degraded', db, time: new Date().toISOString() };
+    const body = { status: db === 'up' ? 'ok' : 'degraded', db, time: new Date().toISOString() };
+    // 503 (same body) when the database is unreachable, so a platform health check can tell a broken instance from a healthy one.
+    if (db === 'down') throw new ServiceUnavailableException(body);
+    return body;
   }
 }

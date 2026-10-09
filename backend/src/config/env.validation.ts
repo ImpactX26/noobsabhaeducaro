@@ -29,6 +29,11 @@ export class EnvironmentVariables {
 
   @IsString()
   UPLOAD_DIR: string = './uploads';
+
+  // Comma-separated browser origins allowed by CORS (the deployed frontend). Unset = permissive (local dev).
+  @IsOptional()
+  @IsString()
+  CORS_ORIGINS?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

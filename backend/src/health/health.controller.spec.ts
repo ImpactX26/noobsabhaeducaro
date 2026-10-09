@@ -1,3 +1,4 @@
+import { ServiceUnavailableException } from '@nestjs/common';
 import { HealthController } from './health.controller';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -11,9 +12,10 @@ describe('HealthController', () => {
     expect(res.db).toBe('up');
   });
 
-  it('reports degraded when the database fails', async () => {
-    const res = await make(jest.fn().mockRejectedValue(new Error('down'))).check();
-    expect(res.status).toBe('degraded');
-    expect(res.db).toBe('down');
+  it('answers 503 with a degraded body when the database fails (so health checks fail)', async () => {
+    const err = await make(jest.fn().mockRejectedValue(new Error('down'))).check().catch((e) => e);
+    expect(err).toBeInstanceOf(ServiceUnavailableException);
+    expect(err.getStatus()).toBe(503);
+    expect(err.getResponse()).toMatchObject({ status: 'degraded', db: 'down' });
   });
 });

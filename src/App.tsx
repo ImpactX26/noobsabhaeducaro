@@ -24,6 +24,8 @@ import { ApplicantProfileScreen } from './components/ApplicantProfileScreen';
 import { QualificationCheckScreen } from './components/QualificationCheckScreen';
 import { NextActionScreen } from './components/NextActionScreen';
 import { LoginScreen } from './components/LoginScreen';
+import { DemoBanner } from './components/DemoBanner';
+import { isDemoMode } from './demo/demoMode';
 
 /** Screens that show the applicant's backend journey need an application to exist first. */
 const NEEDS_APPLICATION: ApplicationStep[] = ['dashboard', 'profile', 'qualification', 'next-action'];
@@ -118,6 +120,9 @@ function AppContent() {
 
   return (
     <div className="relative min-h-screen flex flex-col theme-bg-main theme-text-main transition-colors duration-200">
+      {/* DEMO MODE notice: shown only while the in-browser simulation is active */}
+      {isDemoMode() && <DemoBanner />}
+
       {/* Top Navbar */}
       <Navbar
         currentStep={currentStep}

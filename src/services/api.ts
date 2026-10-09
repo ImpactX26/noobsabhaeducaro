@@ -5,6 +5,9 @@
  * agent's decisions: this client just transports them. No AI provider key ever reaches the browser.
  */
 
+import { demoApi } from '../demo/demoApi';
+import { isDemoMode } from '../demo/demoMode';
+
 /** Local backend. Vite itself uses port 3000 in this repo, so the API runs on 3001 (see .env.example). */
 export const API_BASE_URL: string = (
   (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://localhost:3001'
@@ -22,16 +25,8 @@ export const setUnauthorizedHandler = (handler: (() => void) | null) => {
   onUnauthorized = handler;
 };
 
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    /** HTTP status; 0 when the backend could not be reached at all. */
-    public readonly status: number,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
+import { ApiError } from './apiError';
+export { ApiError };
 
 // ------------------------------------------------------------------ response types
 
@@ -250,7 +245,7 @@ const json = (body: unknown): RequestInit => ({ method: 'POST', body: JSON.strin
 
 // ------------------------------------------------------------------ endpoints
 
-export const api = {
+const realApi = {
   health: () => request<{ status: string; db: string }>('/health'),
 
   register: (input: { name: string; email: string; password: string }) => request<AuthSession>('/auth/register', json(input)),
@@ -288,3 +283,11 @@ export const api = {
   answerClarification: (id: string, clarificationId: string, answer: { value?: unknown; choice?: string; text?: string }) =>
     request<AnswerResult>(`/applicants/${id}/clarifications/${clarificationId}/answer`, json(answer)),
 };
+
+/**
+ * The client every screen uses. Normally it is the real backend client above. In DEMO MODE (see
+ * src/demo/demoMode.ts) the same interface is answered by an in-browser simulation instead.
+ */
+export const api: typeof realApi = new Proxy(realApi, {
+  get: (_target, key) => (isDemoMode() ? demoApi : realApi)[key as keyof typeof realApi],
+}) as typeof realApi;

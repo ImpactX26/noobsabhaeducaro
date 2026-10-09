@@ -1,0 +1,59 @@
+# Builds and publishes ONLY the React frontend (repository root) to GitHub Pages.
+# The NestJS backend in ./backend is not built or deployed here.
+# Site: https://impactx26.github.io/noobsabhaeducaro/
+name: Deploy frontend to GitHub Pages
+
+on:
+  push:
+    branches: [integration/frontend-backend]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one deployment at a time; a newer push replaces an unfinished one
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/configure-pages@v5
+
+      - run: npm ci
+
+      - name: Build the frontend
+        run: npm run build
+        env:
+          # GitHub Pages serves this repository under /noobsabhaeducaro/
+          VITE_BASE_PATH: /noobsabhaeducaro/
+          # Start in the clearly labelled, simulated DEMO MODE. Visitors can switch to the live backend in the UI.
+          VITE_DEMO_MODE: "true"
+          # Optional: a public backend URL (repository variable, Settings > Secrets and variables > Actions > Variables).
+          # It is public by design: never put a secret or an API key here.
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

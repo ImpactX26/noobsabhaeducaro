@@ -4,7 +4,12 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  // Served from the site root by default. GitHub Pages serves this repo under /noobsabhaeducaro/, so the
+  // Pages workflow sets VITE_BASE_PATH=/noobsabhaeducaro/ (leading and trailing slash).
+  const trimmed = (process.env.VITE_BASE_PATH || '').replace(/^\/+|\/+$/g, '');
+  const base = trimmed ? `/${trimmed}/` : '/';
   return {
+    base,
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

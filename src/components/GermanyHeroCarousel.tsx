@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MapPin, Sparkles } from 'lucide-react';
+import { asset } from '../utils/asset';
 
 export interface HeroCarouselImage {
   id: string;
@@ -48,7 +49,7 @@ const heroCarouselImages: HeroCarouselImage[] = [
     city: 'Hamburg',
     landmark: 'Elbphilharmonie & Maritime Innovation Harbor',
     category: 'Northern Tech & Port Metropolis',
-    url: '/hamburg.jpg',
+    url: asset('hamburg.jpg'),
     fallbackGradient: 'from-slate-900 via-neutral-900 to-black',
   },
   {
@@ -56,7 +57,7 @@ const heroCarouselImages: HeroCarouselImage[] = [
     city: 'Frankfurt am Main',
     landmark: 'Main River Skyline & Goethe University Campus',
     category: 'European Financial & AI Epicenter',
-    url: '/frankfurt.jpg',
+    url: asset('frankfurt.jpg'),
     fallbackGradient: 'from-emerald-950/70 via-neutral-900 to-black',
   },
   {

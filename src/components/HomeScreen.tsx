@@ -22,6 +22,7 @@ import {
 import { UniversityCarousel } from './UniversityCarousel';
 import { GermanyHeroCarousel } from './GermanyHeroCarousel';
 import { GermanyBackground } from './GermanyBackground';
+import { asset } from '../utils/asset';
 
 interface HomeScreenProps {
   onStart: () => void;
@@ -58,13 +59,13 @@ const germanyHubs = [
     city: 'Frankfurt & Rhine-Main',
     state: 'Hesse',
     highlight: 'Goethe University & European Finance',
-    img: 'frankfurt.jpg',
+    img: asset('frankfurt.jpg'),
   },
   {
     city: 'Hamburg',
     state: 'Northern Germany',
     highlight: 'University of Hamburg & Maritime Tech',
-    img: '/hamburg.jpg',
+    img: asset('hamburg.jpg'),
   },
 ];
 

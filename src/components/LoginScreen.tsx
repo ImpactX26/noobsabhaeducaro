@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { isDemoMode, setDemoMode } from '../demo/demoMode';
 import {
   Lock,
   Mail,
@@ -257,7 +258,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       {/* Privacy Safeguard Note */}
       <div className="mt-5 flex items-center justify-center gap-2 text-[11px] font-mono theme-text-muted">
         <ShieldCheck className="w-3.5 h-3.5 text-[#FFD21C]" />
-        <span>Your data is private to your account</span>
+        <span>{isDemoMode() ? 'Demo mode: no real account is created or checked' : 'Your data is private to your account'}</span>
+      </div>
+
+      {/* DEMO MODE entry/exit. Demo is a labelled simulation; it never replaces real sign-in. */}
+      <div className="mt-3 text-center text-[11px] font-mono theme-text-muted">
+        {isDemoMode() ? (
+          <>
+            <p className="mb-1">DEMO MODE: any details open a simulated sample session (nothing is sent anywhere).</p>
+            <button type="button" onClick={() => setDemoMode(false)} className="underline hover:text-[#FFD21C] cursor-pointer">
+              Use the live backend instead
+            </button>
+          </>
+        ) : (
+          <button type="button" onClick={() => setDemoMode(true)} className="underline hover:text-[#FFD21C] cursor-pointer">
+            Backend unavailable? Try DEMO MODE (simulated sample data)
+          </button>
+        )}
       </div>
     </div>
   );

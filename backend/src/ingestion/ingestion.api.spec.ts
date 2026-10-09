@@ -125,7 +125,8 @@ describe('Document ingestion (real PostgreSQL, real Arjun PDFs, scripted Claude)
       for (const f of ARJUN_FILES) {
         expect(results[f].document.status).toBe('DONE');
         expect(results[f].document.textMethod).toBe('TEXT_LAYER');
-        expect(results[f].document.extraction.docTypeSource).toBe('TITLE');
+        // the type was established from the content (title text AND the model's reading agree); the slot was not used as evidence
+        expect(results[f].document.extraction).toMatchObject({ typeBasis: 'TITLE_AND_MODEL', detectedType: results[f].document.docType, declaredType: null });
         expect(results[f].rejected).toEqual([]);
       }
     });
@@ -332,7 +333,9 @@ describe('Document ingestion (real PostgreSQL, real Arjun PDFs, scripted Claude)
       const doc = await upload(applicantId, 'mystery.pdf', makeTextPdf(['Some unrelated page of text that is long enough to count as text']));
       const res = await http().post(`/applicants/${applicantId}/documents/${doc.id}/process`).expect(200);
       expect(res.body.document.status).toBe('FAILED');
-      expect(res.body.document.error).toMatch(/document type/);
+      expect(res.body.document.error).toMatch(/could not be determined from its content/);
+      expect(res.body.run).toMatchObject({ status: 'FAILED', rejection: { code: 'DOCUMENT_TYPE_UNCLEAR', detectedType: 'UNKNOWN' } });
+      expect(await prisma.claim.count({ where: { applicantId } })).toBe(0);
     });
 
     it('returns 404 for documents of another applicant and 400 for bad ids', async () => {

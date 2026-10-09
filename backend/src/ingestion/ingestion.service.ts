@@ -10,7 +10,8 @@ import { LlmOutputError, LlmService, LlmUnavailableError } from '../llm/llm.serv
 import { PrismaService } from '../prisma/prisma.service';
 import { classifyDocument } from './classify';
 import { DocumentReader, IngestionError } from './document-reader';
-import { DOC_TYPES, EXTRACTION_SCHEMA, EXTRACTION_SYSTEM_PROMPT, buildExtractionUserText } from './extraction.schema';
+import { decideDocumentType, hasTypeEvidence, noEvidenceRejection, type Rejection } from './document-type';
+import { EXTRACTION_SCHEMA, EXTRACTION_SYSTEM_PROMPT, buildExtractionUserText } from './extraction.schema';
 import { groundClaims, parseProposedClaims } from './grounding';
 
 const CLAIM_SELECT = {
@@ -54,7 +55,6 @@ const RUN_SELECT = {
   completedAt: true,
 } as const;
 
-const isDocType = (v: unknown): v is DocumentType => typeof v === 'string' && (DOC_TYPES as readonly string[]).includes(v);
 const json = (v: unknown) => v as Prisma.InputJsonValue;
 
 @Injectable()
@@ -99,12 +99,17 @@ export class IngestionService {
       return { document, run: { id: run.id, version: run.version, status: 'DONE' as const }, claims, rejected };
     } catch (err) {
       const message = this.userMessage(err);
+      // A document rejected for what it IS keeps a machine-readable reason with the failed run (no claims were stored).
+      const rejection = err instanceof IngestionError ? err.rejection : undefined;
       await this.prisma.$transaction([
-        this.prisma.documentRun.update({ where: { id: run.id }, data: { status: 'FAILED', error: message, completedAt: new Date() } }),
+        this.prisma.documentRun.update({
+          where: { id: run.id },
+          data: { status: 'FAILED', error: message, completedAt: new Date(), ...(rejection && { extraction: json({ rejection }) }) },
+        }),
         this.prisma.document.update({ where: { id: doc.id }, data: { status: 'FAILED', error: message } }),
       ]);
       const document = await this.prisma.document.findUniqueOrThrow({ where: { id: doc.id }, select: DOCUMENT_SELECT });
-      return { document, run: { id: run.id, version: run.version, status: 'FAILED' as const }, claims: [], rejected: [] };
+      return { document, run: { id: run.id, version: run.version, status: 'FAILED' as const, rejection }, claims: [], rejected: [] };
     }
   }
 
@@ -112,6 +117,10 @@ export class IngestionService {
   private async createRun(documentId: string) {
     const last = await this.prisma.documentRun.aggregate({ where: { documentId }, _max: { version: true } });
     return this.prisma.documentRun.create({ data: { documentId, version: (last._max.version ?? 0) + 1 } });
+  }
+
+  private rejectionError(r: Rejection): IngestionError {
+    return new IngestionError(r.message, { code: r.code, detectedType: r.detectedType, expectedType: r.expectedType });
   }
 
   private userMessage(err: unknown): string {
@@ -127,38 +136,43 @@ export class IngestionService {
     const buffer = await fs.readFile(this.storage.resolve(doc.storagePath));
     const read = await this.reader.read({ buffer, mime: doc.mime, filename: doc.filename });
 
-    // Document type: title/filename heuristics first, then the applicant's hint, then Claude.
-    const cls = classifyDocument(read.pages[0], doc.filename);
-    let docType: DocumentType = cls.docType !== 'UNKNOWN' ? cls.docType : doc.docType;
-    let docTypeSource: 'TITLE' | 'FILENAME' | 'APPLICANT_HINT' | 'LLM' | 'NONE' =
-      cls.docType !== 'UNKNOWN' ? cls.source : doc.docType !== 'UNKNOWN' ? 'APPLICANT_HINT' : 'NONE';
-    const hintOverridden = cls.docType !== 'UNKNOWN' && doc.docType !== 'UNKNOWN' && cls.docType !== doc.docType;
+    // What the document IS comes from its content only: its own title text and the model's reading of the
+    // whole text. The file name and the upload slot (`doc.docType`) are NOT evidence; the slot is only what
+    // the applicant claims, and is compared with the content below.
+    const titleType = classifyDocument(read.pages[0]).docType;
 
     const output = await this.llm.completeJson({
       system: EXTRACTION_SYSTEM_PROMPT,
-      content: [{ type: 'text', text: buildExtractionUserText(read.pages, doc.filename) }],
+      content: [{ type: 'text', text: buildExtractionUserText(read.pages) }],
       schema: EXTRACTION_SCHEMA,
-      maxTokens: 2000, // fits a small OpenRouter allowance; the global default stays 3000
+      maxTokens: 2000, // extraction call limit; the global default stays 3000
+      label: doc.filename, // for logs/test doubles only: never sent to the model
     });
     const proposed = parseProposedClaims(output);
 
-    if (docType === 'UNKNOWN' && isDocType(proposed.documentType) && proposed.documentType !== 'UNKNOWN') {
-      docType = proposed.documentType;
-      docTypeSource = 'LLM';
-    }
-    if (docType === 'UNKNOWN') {
-      throw new IngestionError('Could not determine the document type; set docType on the document and retry');
-    }
+    // Decide BEFORE anything is persisted: a document that is not what it was uploaded as, or is not a
+    // supported type, fails here and contributes no claims and no requirement credit.
+    const slot = doc.docType;
+    const decision = decideDocumentType({ titleType, modelType: proposed.documentType, slot });
+    if (!decision.ok) throw this.rejectionError(decision.rejection);
+    const docType: DocumentType = decision.docType;
 
     const grounded = groundClaims(proposed.claims, read.pages, docType);
+    // ... and it must be backed by grounded evidence of its own kind (a name/date of birth alone is not enough).
+    if (!hasTypeEvidence(decision.docType, grounded.accepted.map((c) => c.fieldKey))) {
+      const rejection = noEvidenceRejection(decision.docType, slot);
+      if (!rejection.ok) throw this.rejectionError(rejection.rejection);
+    }
     const rejected = [...proposed.rejected, ...grounded.rejected];
     const pages = read.pages.map((p) => ({ pageNo: p.pageNo, text: p.text, method: p.method }));
 
     const extraction = {
       model: this.llm.model,
       processedAt: new Date().toISOString(),
-      docTypeSource,
-      hintOverridden,
+      // how the type was established from the content (TITLE, MODEL or both), and what the applicant had claimed
+      detectedType: decision.docType,
+      typeBasis: decision.basis,
+      declaredType: slot === 'UNKNOWN' ? null : slot,
       textLayer: read.textLayer,
       pageMethods: read.pages.map((p) => ({ pageNo: p.pageNo, method: p.method })),
       proposed: proposed.claims.length + proposed.rejected.length,

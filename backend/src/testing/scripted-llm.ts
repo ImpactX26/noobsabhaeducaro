@@ -123,8 +123,8 @@ export class ScriptedLlm {
       return { pages: this.transcriptions.shift() ?? [] };
     }
     if (this.gate) await this.gate;
-    const block = req.content[0] as { type: 'text'; text: string };
-    const filename = /^Filename: (.+)$/m.exec(block.text)?.[1] ?? '';
+    // The document's file name arrives as the request label: it is never part of the prompt the model sees.
+    const filename = req.label ?? '';
     this.calls.push({ kind: 'extract', filename });
     const entry = this.override[filename] ?? ARJUN_SCRIPT[filename] ?? { documentType: 'UNKNOWN', claims: [] };
     return {

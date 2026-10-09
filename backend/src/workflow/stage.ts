@@ -2,17 +2,18 @@ import type { Stage } from '../generated/prisma/enums';
 
 export interface EvaluationOutcomeInput {
   verdict: string;
-  gaps: Array<{ kind: string }>;
+  gaps: Array<{ kind: string; severity?: string }>;
 }
 
 /**
  * The journey stage an evaluation leads to:
- *   READY            - verdict READY
+ *   READY            - the persisted verdict is READY AND no blocking gap (missing mandatory item or conflict) remains
  *   ACTION_REQUIRED  - the applicant has to act: a conflict to resolve, or a mandatory requirement not met
  *   INCOMPLETE       - evidence is still missing / unverified
  */
 export function outcomeStage(e: EvaluationOutcomeInput): Stage {
-  if (e.verdict === 'READY') return 'READY';
+  // Belt and braces: a READY verdict can only come with every mandatory requirement met, but never show READY while a blocking gap exists.
+  if (e.verdict === 'READY' && !e.gaps.some((g) => g.severity === 'BLOCKING')) return 'READY';
   if (e.gaps.some((g) => g.kind === 'CONFLICT') || e.verdict === 'NOT_ELIGIBLE_DEMO') return 'ACTION_REQUIRED';
   return 'INCOMPLETE';
 }

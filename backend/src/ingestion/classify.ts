@@ -11,33 +11,25 @@ const TITLE_RULES: Array<[DocumentType, RegExp]> = [
   ['CV', /curriculum vitae|\bresume\b|\bcv\b/],
 ];
 
-const FILENAME_RULES: Array<[DocumentType, RegExp]> = [
-  ['SOP', /sop|statement[-_ ]?of[-_ ]?purpose/],
-  ['TRANSCRIPT', /transcript|marksheet/],
-  ['LANGUAGE_CERT', /language|ielts|toefl|english/],
-  ['EXPERIENCE_LETTER', /experience|internship|employment/],
-  ['DEGREE', /degree|diploma/],
-  ['CV', /\bcv\b|_cv|cv_|resume|curriculum/],
-];
-
 const TITLE_LINES = 8;
 
 export interface Classification {
   docType: DocumentType;
-  source: 'TITLE' | 'FILENAME' | 'NONE';
+  source: 'TITLE' | 'NONE';
 }
 
 /**
- * Cheap deterministic classification. Looks only at the document title area (a statement of
+ * Cheap deterministic classification from the document's OWN TEXT (its title area; a statement of
  * purpose that mentions "degree" must not be classified as a degree certificate).
- * Returns UNKNOWN when nothing matches; the LLM is then asked, and only for that case.
+ *
+ * The file name and the upload slot are deliberately not inputs: both are chosen by the uploader and
+ * are not evidence of what the document is. Returns UNKNOWN when the title says nothing; the model's
+ * reading of the whole content then decides (see document-type.ts).
  */
-export function classifyDocument(firstPage: PageText | undefined, filename: string): Classification {
+export function classifyDocument(firstPage: PageText | undefined): Classification {
   if (firstPage) {
     const head = firstPage.text.split(/\r?\n/).slice(0, TITLE_LINES).join(' ').toLowerCase();
     for (const [type, re] of TITLE_RULES) if (re.test(head)) return { docType: type, source: 'TITLE' };
   }
-  const name = filename.toLowerCase();
-  for (const [type, re] of FILENAME_RULES) if (re.test(name)) return { docType: type, source: 'FILENAME' };
   return { docType: 'UNKNOWN', source: 'NONE' };
 }

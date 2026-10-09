@@ -31,6 +31,8 @@ export interface JsonCompletionRequest {
   /** JSON Schema the response is constrained to (structured outputs). */
   schema: Record<string, unknown>;
   maxTokens?: number;
+  /** Caller's name for the request (e.g. a document file name). Never sent to the model; for logs and test doubles only. */
+  label?: string;
   /** Accepted for interface stability; the model's own default reasoning is used. */
   effort?: 'low' | 'medium' | 'high';
 }

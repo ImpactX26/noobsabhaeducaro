@@ -265,7 +265,9 @@ function evalExperience(req: Extract<RequirementDef, { type: 'EXPERIENCE_MONTHS'
 }
 
 function evalDocs(req: Extract<RequirementDef, { type: 'DOCS_COMPLETE' }>, ctx: EvalContext): RequirementResult {
-  const present = new Set(ctx.documents.filter((d) => d.status !== 'FAILED').map((d) => d.docType));
+  // Only documents that were successfully processed (a run that passed type validation and grounding) count.
+  // Uploaded-but-unscanned, still-processing, failed and rejected (e.g. type mismatch) documents give no credit.
+  const present = new Set(ctx.documents.filter((d) => d.status === 'DONE').map((d) => d.docType));
   const missing = req.params.required.filter((t) => !present.has(t));
   const ok = missing.length === 0;
   return {

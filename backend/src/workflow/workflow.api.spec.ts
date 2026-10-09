@@ -354,7 +354,7 @@ describe('Applicant journey workflow (real PostgreSQL, real Arjun PDFs, scripted
       const cvId = await upload(
         applicantId,
         'cv_2024.pdf',
-        makeTextPdf(['CURRICULUM VITAE', 'Arjun Mehta', 'Graduation year: 2024']),
+        makeTextPdf(['CURRICULUM VITAE', 'Arjun Mehta', 'Bachelor of Technology in Computer Science and Engineering', 'Graduation year: 2024']),
       );
       llm.override['cv_2024.pdf'] = {
         documentType: 'CV',
@@ -364,8 +364,11 @@ describe('Applicant journey workflow (real PostgreSQL, real Arjun PDFs, scripted
       const conflicted = (await http().get(`/applicants/${applicantId}/evaluations/latest`).expect(200)).body;
       expect(conflicted.outcome).toBe('ACTION_REQUIRED');
 
-      // a second extraction of the same document no longer produces that claim
-      llm.override['cv_2024.pdf'] = { documentType: 'CV', claims: [{ fieldKey: 'applicant.name', rawValue: 'Arjun Mehta', quote: 'Arjun Mehta' }] };
+      // a second extraction of the same document no longer produces that claim (it still yields a CV fact of its own kind)
+      llm.override['cv_2024.pdf'] = {
+        documentType: 'CV',
+        claims: [{ fieldKey: 'degree.level', rawValue: 'Bachelor of Technology', quote: 'Bachelor of Technology in Computer Science and Engineering' }],
+      };
       const res = await processDoc(applicantId, cvId, '?force=true');
       expect(res.body.stage).toBe('READY'); // the conflict is gone: the CV was the only 2024 source ...
 

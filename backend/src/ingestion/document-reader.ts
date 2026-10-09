@@ -5,7 +5,11 @@ import { assessTextLayer, extractPdfPages, type PageText } from './pdf-text';
 
 /** A problem with the document itself (not a bug): shown to the applicant, stored in Document.error. */
 export class IngestionError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    /** Set when the document was rejected for what it IS (see document-type.ts); stored with the failed run. */
+    public readonly rejection?: { code: string; detectedType: string; expectedType: string | null },
+  ) {
     super(message);
     this.name = 'IngestionError';
   }

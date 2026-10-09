@@ -143,7 +143,14 @@ export class IngestionService {
     doc: { id: string; applicantId: string; filename: string; mime: string; storagePath: string; docType: DocumentType },
     runId: string,
   ) {
-    const buffer = await fs.readFile(this.storage.resolve(doc.storagePath));
+    const buffer = await fs.readFile(this.storage.resolve(doc.storagePath)).catch((err: NodeJS.ErrnoException) => {
+      // On hosts with temporary storage (e.g. a free web tier) uploaded files vanish on restart while the database
+      // keeps its rows. Say so instead of "unexpected error". No rejection code: earlier evidence is NOT retired.
+      if (err.code === 'ENOENT') {
+        throw new IngestionError('The uploaded file is no longer available on the server (temporary storage was reset). Please upload it again.');
+      }
+      throw err;
+    });
     const read = await this.reader.read({ buffer, mime: doc.mime, filename: doc.filename });
 
     // What the document IS comes from its content only: its own title text and the model's reading of the

@@ -623,4 +623,39 @@ describe('Document type validation and completeness credit (real PostgreSQL, scr
       expect(res.body.evaluation).toBeNull();
     });
   });
+  // ------------------------------------------------------------------ 10. temporary storage: file gone, database rows remain
+  describe('an uploaded file that is no longer on disk (temporary-storage hosts)', () => {
+    const removeStoredFile = async (documentId: string) => {
+      const doc = await prisma.document.findUniqueOrThrow({ where: { id: documentId } });
+      rmSync(path.join(uploadDir, doc.storagePath), { force: true });
+    };
+
+    it('an unprocessed upload fails with a clear re-upload message (not "unexpected error") and stores nothing', async () => {
+      const applicantId = await newApplicant();
+      const id = await uploadFx(applicantId, CV, 'CV');
+      await removeStoredFile(id);
+      const res = await http().post(`/applicants/${applicantId}/documents/${id}/process`).expect(200);
+      expect(res.body.document.status).toBe('FAILED');
+      expect(res.body.document.error).toMatch(/no longer available on the server.*upload it again/);
+      expect(res.body.document.error).not.toMatch(/Unexpected/);
+      expect(res.body.run.rejection).toBeUndefined();
+      expect(await prisma.claim.count({ where: { applicantId } })).toBe(0);
+    });
+
+    it('an already-processed document keeps its verified evidence and READY status when the file is gone and a re-scan is attempted', async () => {
+      const applicantId = await newApplicant();
+      await genuineSupportingDocs(applicantId);
+      const degreeId = await uploadFx(applicantId, DEGREE, 'DEGREE');
+      await scanAll(applicantId);
+      expect((await journey(applicantId)).stage).toBe('READY');
+
+      await removeStoredFile(degreeId);
+      const res = await http().post(`/applicants/${applicantId}/documents/${degreeId}/process?force=true`).expect(200);
+      expect(res.body.run).toMatchObject({ status: 'FAILED', evidenceRetired: false });
+      expect(res.body.document.error).toMatch(/no longer available/);
+      const j = await journey(applicantId);
+      expect(requirement(j, 'docs-complete').status).toBe('MET'); // evidence lives in the database, not on disk
+      expect(j.stage).toBe('READY');
+    });
+  });
 });

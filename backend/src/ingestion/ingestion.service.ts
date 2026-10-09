@@ -101,15 +101,25 @@ export class IngestionService {
       const message = this.userMessage(err);
       // A document rejected for what it IS keeps a machine-readable reason with the failed run (no claims were stored).
       const rejection = err instanceof IngestionError ? err.rejection : undefined;
-      await this.prisma.$transaction([
-        this.prisma.documentRun.update({
+      // A definitive content/type rejection also retires the document's earlier active run(s): their claims were
+      // accepted under a type that no longer holds, and must stop counting as current evidence. Nothing is deleted
+      // (runs and claims stay as history). A transient failure (no `rejection`) leaves earlier valid evidence alone.
+      const retired = await this.prisma.$transaction(async (tx) => {
+        await tx.documentRun.update({
           where: { id: run.id },
           data: { status: 'FAILED', error: message, completedAt: new Date(), ...(rejection && { extraction: json({ rejection }) }) },
-        }),
-        this.prisma.document.update({ where: { id: doc.id }, data: { status: 'FAILED', error: message } }),
-      ]);
+        });
+        await tx.document.update({ where: { id: doc.id }, data: { status: 'FAILED', error: message } });
+        if (!rejection) return 0;
+        return (await tx.documentRun.updateMany({ where: { documentId: doc.id, isActive: true }, data: { isActive: false } })).count;
+      });
       const document = await this.prisma.document.findUniqueOrThrow({ where: { id: doc.id }, select: DOCUMENT_SELECT });
-      return { document, run: { id: run.id, version: run.version, status: 'FAILED' as const, rejection }, claims: [], rejected: [] };
+      return {
+        document,
+        run: { id: run.id, version: run.version, status: 'FAILED' as const, rejection, evidenceRetired: retired > 0 },
+        claims: [],
+        rejected: [],
+      };
     }
   }
 

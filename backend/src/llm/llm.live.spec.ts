@@ -38,7 +38,9 @@ live('LlmService (live Gemini)', () => {
       maxTokens: 2000,
     })) as { documentType: string; claims: unknown[] };
     console.log(`live Gemini classification of ${_name}: ${out.documentType} (${out.claims.length} claims)`);
-    expect(out.documentType).toBe(expected);
+    // an almost empty page may be called UNKNOWN or OTHER (the model varies); both are unusable as evidence
+    if (expected === 'UNKNOWN') expect(['UNKNOWN', 'OTHER']).toContain(out.documentType);
+    else expect(out.documentType).toBe(expected);
     if (minClaims === 0) expect(out.claims).toEqual([]); // nothing may be extracted from unusable documents
     else expect(out.claims.length).toBeGreaterThanOrEqual(minClaims);
   }, 120000);

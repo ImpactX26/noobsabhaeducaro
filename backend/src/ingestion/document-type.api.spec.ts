@@ -498,4 +498,129 @@ describe('Document type validation and completeness credit (real PostgreSQL, scr
       expect((await journey(applicantId)).stage).toBe('READY');
     });
   });
+
+  // ------------------------------------------------------------------ 9. stale runs: a definitive rejection retires old evidence
+  describe('an earlier successful run does not survive a definitive rejection of the same document', () => {
+    const runStates = async (documentId: string) =>
+      (await prisma.documentRun.findMany({ where: { documentId }, orderBy: { version: 'asc' } })).map((r) => ({ v: r.version, status: r.status, active: r.isActive }));
+    const activeClaimsOf = async (applicantId: string, docId: string) =>
+      (await http().get(`/applicants/${applicantId}/documents/${docId}/claims`).expect(200)).body as any[];
+    const evalCount = (applicantId: string) => prisma.evaluation.count({ where: { applicantId } });
+
+    /** A fully READY journey whose Degree document was accepted by an earlier run (as under the old rules). */
+    async function readyJourney() {
+      const applicantId = await newApplicant();
+      await genuineSupportingDocs(applicantId);
+      const degreeId = await uploadFx(applicantId, DEGREE, 'DEGREE');
+      await scanAll(applicantId);
+      expect((await journey(applicantId)).stage).toBe('READY');
+      return { applicantId, degreeId };
+    }
+    const nowIdentityCard = () => {
+      llm.override[DEGREE] = { documentType: 'IDENTITY_DOCUMENT', claims: [] };
+    };
+
+    it('old DONE run + forced re-scan rejected as a mismatch: stale claims and credit are gone, history is kept, a new evaluation is stored', async () => {
+      const { applicantId, degreeId } = await readyJourney();
+      const before = await evalCount(applicantId);
+      const oldClaims = await prisma.claim.count({ where: { documentId: degreeId } });
+      expect(oldClaims).toBeGreaterThan(0);
+
+      nowIdentityCard();
+      const res = await http().post(`/applicants/${applicantId}/documents/${degreeId}/process?force=true`).expect(200);
+      expect(res.body.document.status).toBe('FAILED');
+      expect(res.body.run).toMatchObject({ status: 'FAILED', rejection: { code: 'DOCUMENT_TYPE_MISMATCH' }, evidenceRetired: true });
+      expect(res.body.evaluation).toBeTruthy(); // evaluation refreshed
+      expect(res.body.stage).not.toBe('READY');
+
+      // the old run is retired, not deleted; its claims remain as history
+      expect(await runStates(degreeId)).toEqual([{ v: 1, status: 'DONE', active: false }, { v: 2, status: 'FAILED', active: false }]);
+      expect(await prisma.claim.count({ where: { documentId: degreeId } })).toBe(oldClaims);
+      expect(await activeClaimsOf(applicantId, degreeId)).toEqual([]); // no current claims (default scope is active only)
+      const history = (await http().get(`/applicants/${applicantId}/documents/${degreeId}/claims?scope=all`).expect(200)).body as any[];
+      expect(history.length).toBe(oldClaims);
+
+      // qualification no longer sees them
+      const j = await journey(applicantId);
+      expect(await evalCount(applicantId)).toBe(before + 1);
+      expect(requirement(j, 'docs-complete')).toMatchObject({ status: 'MISSING' });
+      expect(j.gaps.map((g: any) => g.id)).toContain('MISSING_DOC:DEGREE');
+      expectNotReady(j);
+      const current = (await http().get(`/applicants/${applicantId}/claims`).expect(200)).body as any[];
+      expect(current.length).toBeGreaterThan(0); // other documents still provide evidence
+      expect(current.some((c) => c.documentId === degreeId)).toBe(false); // none of it comes from the retired run
+    });
+
+    it('batch endpoint: a FAILED document that still had an active run, retried and now definitively rejected, triggers one refreshed evaluation', async () => {
+      const { applicantId, degreeId } = await readyJourney();
+      llm.configured = false; // transient failure first: the valid evidence must survive it
+      await http().post(`/applicants/${applicantId}/documents/${degreeId}/process?force=true`).expect(200);
+      llm.configured = true;
+      expect((await docs(applicantId)).find((d) => d.id === degreeId)!.status).toBe('FAILED');
+      expect((await journey(applicantId)).evaluation.verdict).toBe('READY');
+      const before = await evalCount(applicantId);
+
+      nowIdentityCard();
+      const result = await scanAll(applicantId); // picks up the FAILED document
+      expect(result.processed).toEqual([expect.objectContaining({ documentId: degreeId, status: 'FAILED' })]);
+      expect(result.evaluation).toBeTruthy(); // evaluated even though no document reached DONE
+      expect(await evalCount(applicantId)).toBe(before + 1);
+      expect((await runStates(degreeId)).some((r) => r.active)).toBe(false);
+      expectNotReady(await journey(applicantId));
+    });
+
+    it('a transient failure (model unavailable) keeps the previous evidence, run and READY evaluation, and creates no new evaluation', async () => {
+      const { applicantId, degreeId } = await readyJourney();
+      const before = await evalCount(applicantId);
+      llm.configured = false;
+      const res = await http().post(`/applicants/${applicantId}/documents/${degreeId}/process?force=true`).expect(200);
+      llm.configured = true;
+      expect(res.body.run).toMatchObject({ status: 'FAILED', evidenceRetired: false });
+      expect(res.body.run.rejection).toBeUndefined();
+      expect(res.body.evaluation).toBeNull();
+      expect(await runStates(degreeId)).toEqual([{ v: 1, status: 'DONE', active: true }, { v: 2, status: 'FAILED', active: false }]);
+      expect((await activeClaimsOf(applicantId, degreeId)).length).toBeGreaterThan(0);
+      expect(await evalCount(applicantId)).toBe(before);
+      const j = await journey(applicantId);
+      expect(requirement(j, 'docs-complete').status).toBe('MET');
+      expect(j.stage).toBe('READY');
+    });
+
+    it('is idempotent: retrying the same rejection changes nothing further', async () => {
+      const { applicantId, degreeId } = await readyJourney();
+      nowIdentityCard();
+      await http().post(`/applicants/${applicantId}/documents/${degreeId}/process?force=true`).expect(200);
+      const evals = await evalCount(applicantId);
+      const retry = await http().post(`/applicants/${applicantId}/documents/${degreeId}/process`).expect(200);
+      expect(retry.body.run).toMatchObject({ status: 'FAILED', evidenceRetired: false }); // nothing left to retire
+      expect(retry.body.evaluation).toBeNull();
+      expect(await evalCount(applicantId)).toBe(evals);
+      expect((await runStates(degreeId)).filter((r) => r.active)).toEqual([]);
+      expect(await prisma.claim.count({ where: { documentId: degreeId } })).toBeGreaterThan(0); // history intact
+    });
+
+    it('concurrent forced re-scans leave a consistent state: no active run, no current claims, not READY', async () => {
+      const { applicantId, degreeId } = await readyJourney();
+      nowIdentityCard();
+      const [a, b] = await Promise.all([
+        http().post(`/applicants/${applicantId}/documents/${degreeId}/process?force=true`),
+        http().post(`/applicants/${applicantId}/documents/${degreeId}/process?force=true`),
+      ]);
+      expect([a.status, b.status].every((s) => s === 200 || s === 409)).toBe(true);
+      expect([a.status, b.status]).toContain(200);
+      expect((await runStates(degreeId)).filter((r) => r.active)).toEqual([]);
+      expect(await activeClaimsOf(applicantId, degreeId)).toEqual([]);
+      await http().post(`/applicants/${applicantId}/evaluate`).expect(201);
+      expectNotReady(await journey(applicantId));
+    });
+
+    it('a rejected document that had NO earlier run has nothing to retire and triggers no evaluation', async () => {
+      const applicantId = await newApplicant();
+      llm.override['id.pdf'] = { documentType: 'IDENTITY_DOCUMENT', claims: [] };
+      const id = await upload(applicantId, 'id.pdf', ID_CARD, 'DEGREE');
+      const res = await http().post(`/applicants/${applicantId}/documents/${id}/process`).expect(200);
+      expect(res.body.run).toMatchObject({ status: 'FAILED', evidenceRetired: false });
+      expect(res.body.evaluation).toBeNull();
+    });
+  });
 });

@@ -85,7 +85,9 @@ export class WorkflowService {
 
     let evaluation: Evaluation | null = null;
     let evaluationError: string | undefined;
-    if (result.run.status === 'DONE' && opts.evaluate !== false) {
+    // Evaluate when evidence changed: a new successful run, or earlier evidence retired by a definitive rejection.
+    const evidenceChanged = result.run.status === 'DONE' || ('evidenceRetired' in result.run && result.run.evidenceRetired);
+    if (evidenceChanged && opts.evaluate !== false) {
       try {
         evaluation = await this.evaluations.evaluate(applicantId, { trigger: 'DOCUMENT_PROCESSED', triggerDocumentId: documentId });
       } catch (err) {
@@ -105,13 +107,15 @@ export class WorkflowService {
       select: { id: true },
     });
     const processed: Array<{ documentId: string; status: string; error: string | null }> = [];
+    let evidenceRetired = false;
     for (const { id } of pending) {
       const r = await this.processDocument(applicantId, id, { evaluate: false });
       processed.push({ documentId: id, status: r.document.status, error: r.document.error });
+      if ('evidenceRetired' in r.run && r.run.evidenceRetired) evidenceRetired = true;
     }
     let evaluation: Evaluation | null = null;
     let evaluationError: string | undefined;
-    if (processed.some((p) => p.status === 'DONE')) {
+    if (evidenceRetired || processed.some((p) => p.status === 'DONE')) {
       try {
         evaluation = await this.evaluations.evaluate(applicantId, { trigger: 'DOCUMENT_PROCESSED' });
       } catch (err) {
